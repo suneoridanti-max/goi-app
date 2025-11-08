@@ -363,6 +363,40 @@
         .random-stage-select-container > div { display: flex; align-items: center; gap: 10px; width: 220px; justify-content: space-between; }
         .random-stage-select-container select { padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 1em; }
 
+        /* 修正後: 「語彙王への道」の進捗表示スタイルを追加 */
+        #oilyou-progress-container {
+            margin: 20px auto 0;
+            max-width: 400px;
+            text-align: center;
+        }
+        #oilyou-progress-container p {
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        .progress-bar-background {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 20px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .progress-bar-foreground {
+            height: 100%;
+            width: 0%; /* JavaScriptで幅を操作します */
+            background: linear-gradient(to right, #76b852, #8DC26F);
+            border-radius: 10px 0 0 10px;
+            transition: width 0.5s ease-in-out;
+        }
+        #oilyou-progress-text {
+            display: block;
+            margin-top: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #28a745;
+        }
+
 
         /* --- レスポンシブ対応 --- */
         @media (max-width: 600px) {
@@ -408,8 +442,15 @@
             <div class="main-menu-buttons">
                 <button id="go-to-stage-select-btn" class="main-menu-button">ステージ選択</button>
                 <button id="go-to-test-select-btn" class="main-menu-button">ステージ確認テスト</button>
-                <!-- 修正後: 「語彙王への道」を開始するためのボタンを追加 -->
                 <button id="go-to-oilyou-mode-btn" class="main-menu-button" style="background-color: #28a745;">語彙王への道</button>
+                <!-- 修正後: 「語彙王への道」の進捗表示エリアを追加 -->
+                <div id="oilyou-progress-container">
+                    <p>総合達成率</p>
+                    <div class="progress-bar-background">
+                        <div id="oilyou-progress-bar" class="progress-bar-foreground"></div>
+                    </div>
+                    <span id="oilyou-progress-text">0%</span>
+                </div>
             </div>
              <div class="data-management-buttons">
                 <button id="export-data-button" class="btn btn-success">データをエクスポート</button>
@@ -756,7 +797,6 @@ function calculateCompletionRate(allWords) {
                     RANDOM: 'RANDOM',
                     CONFIRMATION: 'CONFIRMATION',
                     REVIEW: 'REVIEW',
-                    // 修正後: 「語彙王への道」モードのタイプを追加
                     OILYOU: 'OILYOU',
                 }
             };
@@ -803,7 +843,6 @@ function calculateCompletionRate(allWords) {
                 buttons: {
                     goToStageSelect: document.getElementById('go-to-stage-select-btn'),
                     goToTestSelect: document.getElementById('go-to-test-select-btn'),
-                    // 修正後: 「語彙王への道」ボタンの要素を取得
                     goToOilyouMode: document.getElementById('go-to-oilyou-mode-btn'),
                     backToMainMenuFromStages: document.getElementById('back-to-main-menu-from-stages'),
                     backToMainMenuFromTests: document.getElementById('back-to-main-menu-from-tests'),
@@ -834,7 +873,6 @@ function calculateCompletionRate(allWords) {
             };
 
             // --- 状態管理 ---
-            // 修正後: 各単語データに元の配列インデックスを保持させる
             let proverbs = quizDataSource.proverbs.map((p, index) => ({ ...p, originalIndex: index }));
             proverbs.forEach(p => {
                 if (typeof p.example === 'string') {
@@ -880,6 +918,8 @@ function calculateCompletionRate(allWords) {
                         elements.mainMenuScreen.style.display = 'block';
                         elements.buttons.goToExchange.style.display = 'inline-block';
                         updateGemDisplay();
+                        // 修正後: メインメニュー表示時に進捗を更新する関数を呼び出す
+                        updateOilyouProgressDisplay();
                         break;
                     case 'stageSelection':
                         elements.stageSelectionScreen.style.display = 'block';
@@ -915,12 +955,10 @@ function calculateCompletionRate(allWords) {
             function setupEventListeners() {
                 elements.buttons.goToStageSelect.addEventListener('click', () => showScreen('stageSelection'));
                 elements.buttons.goToTestSelect.addEventListener('click', () => showScreen('confirmationTestSelection'));
-                // 修正後: 「語彙王への道」ボタンにイベントリスナーを追加
                 elements.buttons.goToOilyouMode.addEventListener('click', startOilyouMode);
                 elements.buttons.backToMainMenuFromStages.addEventListener('click', () => showScreen('mainMenu'));
                 elements.buttons.backToMainMenuFromTests.addEventListener('click', () => showScreen('mainMenu'));
                 
-                // 修正後: クイズモードによって挙動が変わるように修正
                 elements.buttons.restartQuiz.addEventListener('click', () => {
                     if (state.currentStageType === config.STAGE_TYPE.OILYOU) {
                         startOilyouMode();
@@ -933,7 +971,6 @@ function calculateCompletionRate(allWords) {
                     state.currentStage++;
                     initializeQuiz(false);
                 });
-                // 修正後: クイズモードによって挙動が変わるように修正
                 elements.buttons.backToSelection.addEventListener('click', () => {
                     if (state.currentStageType === config.STAGE_TYPE.OILYOU) {
                         showScreen('mainMenu');
@@ -1050,7 +1087,6 @@ function calculateCompletionRate(allWords) {
             }
 
             // --- クイズロジック ---
-            // 修正後: 「語彙王への道」を開始する関数を新設
             function startOilyouMode() {
                 state.lastSelectionScreen = 'mainMenu';
                 state.currentStageType = config.STAGE_TYPE.OILYOU;
@@ -1125,7 +1161,6 @@ function calculateCompletionRate(allWords) {
                         const reviewEndIndex = reviewStartIndex + config.QUESTION_PER_REVIEW_STAGE;
                         questions = gameData.reviewQuestions.slice(reviewStartIndex, reviewEndIndex);
                         break;
-                    // 修正後: 「語彙王への道」モードの問題作成ロジックを追加
                     case config.STAGE_TYPE.OILYOU:
                         loadProgress(); // 最新の進捗を読み込む
                         const clearedStageWordIndexes = new Set();
@@ -1159,7 +1194,6 @@ function calculateCompletionRate(allWords) {
 
                 const currentQuestion = state.stageQuestions[state.currentQuestionIndex];
                 
-                // 修正後: 「語彙王への道」モードで指定された例文を使うように修正
                 if (state.currentStageType === config.STAGE_TYPE.OILYOU && typeof currentQuestion.oilyouExampleIndex !== 'undefined') {
                     currentQuestion.selectedExample = currentQuestion.example[currentQuestion.oilyouExampleIndex];
                 } else if (Array.isArray(currentQuestion.example) && currentQuestion.example.length > 0) {
@@ -1280,28 +1314,32 @@ function calculateCompletionRate(allWords) {
                             gameData.reviewQuestions.splice(indexToRemove, 1);
                         }
                     }
-                    // 修正後: 正解時に「語彙王への道」の進捗を更新する処理を追加
-                    const wordIndex = currentQuestion.originalIndex;
-                    if (typeof wordIndex !== 'undefined') {
-                        const formId = getQuestionFormat();
-                        const exampleIndex = (formId === 3 || formId === 4) 
-                            ? currentQuestion.example.indexOf(currentQuestion.selectedExample) 
-                            : undefined;
-                        
-                        const key = String(wordIndex);
-                        const progress = oilyouProgressData[key];
-                        let isFirstTimeCorrect = false;
-                        if (!progress) {
-                            isFirstTimeCorrect = true;
-                        } else {
-                            switch (formId) {
-                                case 1: isFirstTimeCorrect = !progress.form1; break;
-                                case 2: isFirstTimeCorrect = !progress.form2; break;
-                                case 3: isFirstTimeCorrect = !(progress.form3 && progress.form3[exampleIndex]); break;
-                                case 4: isFirstTimeCorrect = !(progress.form4 && progress.form4[exampleIndex]); break;
+                    // 修正後: 再挑戦モードでは進捗を更新しない
+                    if (!state.isRetryAttempt) {
+                        const wordIndex = currentQuestion.originalIndex;
+                        if (typeof wordIndex !== 'undefined') {
+                            const formId = getQuestionFormat();
+                            const exampleIndex = (formId === 3 || formId === 4) 
+                                ? (currentQuestion.example ? currentQuestion.example.indexOf(currentQuestion.selectedExample) : -1)
+                                : undefined;
+                            
+                            if (exampleIndex !== -1 || (formId !== 3 && formId !== 4)) {
+                                const key = String(wordIndex);
+                                const progress = oilyouProgressData[key];
+                                let isFirstTimeCorrect = false;
+                                if (!progress) {
+                                    isFirstTimeCorrect = true;
+                                } else {
+                                    switch (formId) {
+                                        case 1: isFirstTimeCorrect = !progress.form1; break;
+                                        case 2: isFirstTimeCorrect = !progress.form2; break;
+                                        case 3: isFirstTimeCorrect = !(progress.form3 && progress.form3[exampleIndex]); break;
+                                        case 4: isFirstTimeCorrect = !(progress.form4 && progress.form4[exampleIndex]); break;
+                                    }
+                                }
+                                updateProgress(wordIndex, formId, exampleIndex, isFirstTimeCorrect);
                             }
                         }
-                        updateProgress(wordIndex, formId, exampleIndex, isFirstTimeCorrect);
                     }
 
                 } else {
@@ -1334,7 +1372,6 @@ function calculateCompletionRate(allWords) {
                 renderResultsList();
                 updateResultButtons();
 
-                // 修正後: 「語彙王への道」モードの結果表示処理を呼び出す
                 if (state.currentStageType === config.STAGE_TYPE.OILYOU) {
                     handleOilyouResults();
                     saveGameData();
@@ -1411,7 +1448,6 @@ function calculateCompletionRate(allWords) {
                     case config.STAGE_TYPE.REVIEW:
                         stageText = `復習ステージ ${state.currentStage}`;
                         break;
-                    // 修正後: 「語彙王への道」モードの表示を追加
                     case config.STAGE_TYPE.OILYOU:
                         const currentQuestion = state.stageQuestions[state.currentQuestionIndex];
                         stageText = `語彙王への道 ${currentQuestion ? `(${currentQuestion.oilyouProgressText})` : ''}`;
@@ -1427,6 +1463,23 @@ function calculateCompletionRate(allWords) {
                 elements.rubyCount.textContent = gameData.totalGems.rubies;
                 elements.sapphireCount.textContent = gameData.totalGems.sapphires;
                 elements.diamondCount.textContent = gameData.totalGems.diamonds;
+            }
+
+            // 修正後: 「語彙王への道」の進捗表示を更新する関数を新設
+            function updateOilyouProgressDisplay() {
+                if (!proverbs || proverbs.length === 0) return;
+
+                loadProgress();
+                const completionRate = calculateCompletionRate(proverbs);
+                const roundedRate = Math.round(completionRate * 10) / 10;
+
+                const progressBar = document.getElementById('oilyou-progress-bar');
+                const progressText = document.getElementById('oilyou-progress-text');
+
+                if (progressBar && progressText) {
+                    progressBar.style.width = `${completionRate}%`;
+                    progressText.textContent = `${roundedRate}%`;
+                }
             }
             
             function renderStageSelection() {
@@ -1682,7 +1735,6 @@ function calculateCompletionRate(allWords) {
             }
             
             function getQuestionFormat() {
-                // 修正後: 「語彙王への道」モードの場合、問題データが持つ出題形式IDを返す
                 if (state.currentStageType === config.STAGE_TYPE.OILYOU) {
                     const currentQuestion = state.stageQuestions[state.currentQuestionIndex];
                     return currentQuestion.oilyouFormId;
@@ -1867,21 +1919,29 @@ function calculateCompletionRate(allWords) {
                 }
             }
             
-            // 修正後: 「語彙王への道」モード専用の結果表示処理を新設
+            // 修正後: 「語彙王への道」の結果処理を改修
             function handleOilyouResults() {
                 const total = state.stageQuestions.length;
                 const correct = state.score;
                 let message = `<p>正解数: ${correct} / ${total}</p>`;
                 
-                elements.results.title.textContent = 'トレーニング結果';
+                // 再挑戦モードか通常モードかでタイトルを変更
+                if (state.isRetryAttempt) {
+                    elements.results.title.textContent = '再挑戦の結果';
+                } else {
+                    elements.results.title.textContent = 'トレーニング結果';
+                }
 
                 if (total > 0) {
                     const perfect = (correct === total);
-                    if (perfect) {
+                    // 再挑戦モードでは報酬を与えない
+                    if (perfect && !state.isRetryAttempt) {
                         const gainedAmount = 10;
                         gameData.totalGems.sapphires += gainedAmount;
                         showGemNotification(gainedAmount, 'sapphire');
                         message += `🎉 全問正解！素晴らしい！サファイアを${gainedAmount}個獲得しました！ 🎉`;
+                    } else if (perfect && state.isRetryAttempt) {
+                        message += `🎉 全て正解しました！素晴らしい！ 🎉`;
                     } else {
                         message += `お疲れ様でした！間違えた問題はまた出題されます。`;
                     }
@@ -1890,7 +1950,8 @@ function calculateCompletionRate(allWords) {
                 }
 
                 elements.results.score.innerHTML = message;
-                elements.buttons.retryIncorrect.style.display = 'none';
+                // 間違った問題があれば再挑戦ボタンを表示
+                elements.buttons.retryIncorrect.style.display = state.incorrectQuestions.length > 0 ? 'inline-block' : 'none';
                 elements.buttons.startNextStage.style.display = 'none';
                 elements.buttons.restartQuiz.textContent = 'もう一度トレーニング';
                 elements.buttons.backToSelection.textContent = 'メインメニューに戻る';
