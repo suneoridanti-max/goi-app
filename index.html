@@ -1,0 +1,1708 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ことば クイズ</title>
+    <style>
+        /* --- 基本スタイル --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: 20px auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            background: linear-gradient(to right, #ece9e6, #ffffff);
+            cursor: default;
+        }
+        body.next-clickable {
+            cursor: pointer;
+        }
+
+        /* --- 見出し --- */
+        h1, h2, h3 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        h1 {
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+
+        /* --- コンテナ --- */
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+
+        /* --- 情報表示 --- */
+        #total-questions-info {
+            text-align: center;
+            color: #555;
+            margin-top: -15px;
+            margin-bottom: 20px;
+        }
+        #total-rewards-info {
+            text-align: center;
+            font-size: 1.2em;
+            color: #4CAF50;
+            margin-bottom: 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        #total-rewards-info > span {
+            display: flex;
+            align-items: center;
+        }
+        .gem-icon svg {
+            width: 1.5em;
+            height: 1.5em;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        /* --- クイズセクション --- */
+        #quiz-section { display: none; }
+        .question-counter {
+            text-align: center;
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        .stage-info {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .question-section {
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .question-display, .question-example-sentence {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #34495e;
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid #3498db;
+            width: 90%;
+            text-align: center;
+        }
+        .question-example-sentence {
+            text-align: left;
+        }
+        .question-example-sentence .blank-word {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        /* --- 選択肢ボタン --- */
+        .options button {
+            display: block;
+            width: 100%;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            border: 1px solid #add8e6;
+            border-radius: 8px;
+            background-color: #e0f2f7;
+            font-size: 1.1em;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #2c3e50;
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .options button.word-option { font-size: 1.25em; }
+        .options button:hover {
+            background-color: #cce9f5;
+            border-color: #9acfea;
+            transform: translateY(-2px);
+        }
+        .options button.correct {
+            background-color: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+            animation: pulse-green 0.5s ease-in-out;
+        }
+        .options button.incorrect {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+            animation: shake 0.5s ease-in-out;
+        }
+        .options button ruby { font-size: 1em; }
+        .options button rt { font-size: 0.6em; opacity: 0.9; }
+
+        /* --- フィードバック --- */
+        .feedback-section { text-align: center; margin-top: 25px; min-height: 50px; }
+        .feedback-section p {
+            font-size: 1.4em;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .feedback-section .correct { color: #28a745; background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .feedback-section .incorrect { color: #dc3545; background-color: #f8d7da; border: 1px solid #f5c6cb; }
+
+        /* --- 解答詳細 --- */
+        #answer-detail-section {
+            display: none;
+            text-align: center;
+            margin-top: 30px;
+            padding: 25px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            border: 1px solid #cceeff;
+        }
+        #answer-detail-section .status-icon { font-size: 3em; font-weight: bold; margin-bottom: 15px; display: block; }
+        #answer-detail-section .status-icon.correct { color: #28a745; }
+        #answer-detail-section .status-icon.incorrect { color: #dc3545; }
+        #answer-detail-section p { font-size: 1.1em; margin-bottom: 10px; }
+        #answer-detail-section .correct-answer-display { font-size: 1.4em; font-weight: bold; color: #333; margin-bottom: 15px; }
+        #answer-detail-section .correct-answer-display rt { font-size: 0.6em; }
+        #answer-detail-section .example-sentence { background-color: #e9f5ff; padding: 15px; border-radius: 5px; border-left: 4px solid #007bff; margin-top: 20px; text-align: left; }
+        #answer-detail-section .feedback-text { font-size: 1.5em; font-weight: bold; margin-bottom: 15px; }
+        #answer-detail-section .feedback-text.correct { color: #28a745; }
+        #answer-detail-section .feedback-text.incorrect { color: #dc3545; }
+
+        /* --- 結果画面 --- */
+        .results-section { display: none; text-align: center; margin-top: 30px; }
+        .results-list { list-style: none; padding: 0; text-align: left; margin-top: 20px; }
+        .results-list li { padding: 10px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; align-items: center; }
+        .results-list li:last-child { border-bottom: none; }
+        .results-list .correct-icon { color: #28a745; font-weight: bold; margin-left: 10px; }
+        .results-list .incorrect-icon { color: #dc3545; font-weight: bold; margin-left: 10px; }
+
+        /* --- 汎用ボタン --- */
+        .btn {
+            padding: 12px 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            margin: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: white;
+        }
+        .btn:hover:not(:disabled) { opacity: 0.85; }
+        .navigation-buttons { text-align: center; margin-top: 20px; }
+        .btn-info { background-color: #17a2b8; }
+        .btn-warning { background-color: #ffc107; color: #333; }
+        .btn-primary { background-color: #007bff; }
+        .btn-secondary { background-color: #6c757d; }
+        .btn-success { background-color: #28a745; }
+        .btn-purple { background-color: #9c27b0; }
+
+        /* --- メインメニュー画面 --- */
+        #main-menu-screen { display: none; text-align: center; }
+        .main-menu-buttons { display: flex; flex-direction: column; gap: 20px; margin: 30px auto; max-width: 400px; }
+        .main-menu-button {
+            padding: 25px 20px;
+            font-size: 1.8em;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            border: none;
+            color: white;
+        }
+        .main-menu-button:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        #go-to-stage-select-btn { background-color: #007bff; }
+        #go-to-test-select-btn { background-color: #8A2BE2; }
+
+        /* --- ステージ選択画面 --- */
+        #stage-selection-screen, #confirmation-test-selection-screen { display: none; text-align: center; }
+        .stage-buttons { display: flex; flex-direction: column; align-items: center; gap: 20px; margin-top: 20px; }
+        .stage-buttons button, .stage-buttons .btn {
+            width: 90%;
+            max-width: 400px;
+            padding: 20px 15px;
+            font-size: 1.4em;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .stage-buttons button:hover:not(:disabled) { transform: translateY(-3px); }
+        .stage-buttons button:disabled { background-color: #cccccc; color: #666666; cursor: not-allowed; box-shadow: none; transform: none; }
+        .stage-buttons .random-stage { background-color: #28a745; color: white; }
+        .stage-buttons .random-stage:hover:not(:disabled) { background-color: #218838; }
+        .stage-buttons .review-stage { background-color: #ff9800; color: white; } /* 復習ステージ用 */
+        .stage-buttons .review-stage:hover:not(:disabled) { background-color: #f57c00; } /* 復習ステージ用 */
+        
+        .stage-select-dropdown-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 90%;
+            max-width: 400px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        #stage-select-dropdown {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.2em;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        
+        .stage-buttons .confirmation-test { background-color: #8A2BE2; color: white; }
+        .stage-buttons .confirmation-test:hover:not(:disabled) { background-color: #6A1AA0; }
+        
+        /* --- アイテム交換 & 履歴画面 --- */
+        #item-exchange-screen, #item-history-screen { display: none; }
+        #exchange-items-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 10px; 
+            margin-top: 20px; 
+        }
+        .exchange-item { 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            padding: 10px; 
+            text-align: center; 
+            background-color: #fafafa; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+        }
+        .exchange-item h3 {
+            font-size: 1em;
+            margin-bottom: 5px;
+        }
+        .item-cost { 
+            margin: 8px 0; 
+            font-size: 1em; 
+            font-weight: bold; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 5px; 
+        }
+        .exchange-select {
+            display: block;
+            width: 100%;
+            padding: 6px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: white;
+            font-size: 1em;
+        }
+        .exchange-button { 
+            padding: 8px 12px; 
+            font-size: 1em; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 5px; 
+            transition: background-color 0.3s ease; 
+            background-color: #ff9800; 
+            color: white; 
+        }
+        .exchange-button:hover:not(:disabled) { background-color: #f57c00; }
+        .exchange-button:disabled { background-color: #ccc; cursor: not-allowed; }
+        
+        #exchange-history-list { 
+            list-style: none; 
+            padding: 0; 
+            margin-top: 20px;
+        }
+        #exchange-history-list li { 
+            background-color: #f9f9f9; 
+            border: 1px solid #e0e0e0; 
+            border-radius: 5px; 
+            margin-bottom: 10px; 
+            padding: 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 0.95em; 
+        }
+
+        /* --- 通知 & アラート & モーダル --- */
+        .gem-notification { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px 40px; border-radius: 15px; font-size: 2.5em; font-weight: bold; z-index: 1000; opacity: 0; transition: opacity 0.5s ease-out, transform 0.5s ease-out; pointer-events: none; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        #ruby-notification { background-color: rgba(255, 0, 0, 0.8); box-shadow: 0 0 20px rgba(255, 0, 0, 0.6); }
+        #sapphire-notification { background-color: rgba(0, 0, 255, 0.8); box-shadow: 0 0 20px rgba(0, 0, 255, 0.6); }
+        #diamond-notification { background-color: rgba(255, 255, 0, 0.8); box-shadow: 0 0 20px rgba(255, 255, 0, 0.6); color: #333; }
+        .gem-notification.show { opacity: 1; animation: fadeInOutScale 1.5s ease-in-out forwards; }
+        .custom-alert-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+        .custom-alert-box { background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; max-width: 90%; width: 400px; }
+        .custom-alert-message { margin-bottom: 20px; font-size: 1.2em; }
+        .custom-alert-buttons button { margin: 0 10px; }
+        .random-stage-select-container { display: flex; flex-direction: column; gap: 15px; margin: 20px 0; align-items: center; }
+        .random-stage-select-container > div { display: flex; align-items: center; gap: 10px; width: 220px; justify-content: space-between; }
+        .random-stage-select-container select { padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 1em; }
+
+
+        /* --- レスポンシブ対応 --- */
+        @media (max-width: 600px) {
+            .main-menu-button { font-size: 1.5em; }
+        }
+
+        /* --- アニメーション --- */
+        @keyframes pulse-green { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
+        @keyframes fadeInOutScale {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            80% { opacity: 1; transform: translate(-50%, -50%) scale(1.0); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ことば クイズ</h1>
+        <p id="total-questions-info"></p>
+        <div id="total-rewards-info">
+            <span id="ruby-display">
+                <span class="gem-icon" style="color: #E0115F;">
+                    <svg width="24" height="24" viewBox="0 0 24" fill="currentColor"><path d="M12 2L4 10L12 22L20 10L12 2Z"/></svg>
+                </span> <span id="ruby-count">0</span>個
+            </span>
+            <span id="sapphire-display">
+                <span class="gem-icon" style="color: #0F52BA;">
+                    <svg width="24" height="24" viewBox="0 0 24" fill="currentColor"><path d="M12 2L4 10L12 22L20 10L12 2Z"/></svg>
+                </span> <span id="sapphire-count">0</span>個
+            </span>
+            <span id="diamond-display">
+                <span class="gem-icon" style="color: #B9F2FF;">
+                    <svg width="24" height="24" viewBox="0 0 24" fill="currentColor"><path d="M12 2L4 10L12 22L20 10L12 2Z"/></svg>
+                </span> <span id="diamond-count">0</span>個
+            </span>
+            <button id="go-to-exchange-button" class="btn btn-purple">宝石をアイテムと交換</button>
+        </div>
+        
+        <div id="main-menu-screen">
+            <h2>メニュー</h2>
+            <div class="main-menu-buttons">
+                <button id="go-to-stage-select-btn" class="main-menu-button">ステージ選択</button>
+                <button id="go-to-test-select-btn" class="main-menu-button">ステージ確認テスト</button>
+            </div>
+             <div class="data-management-buttons">
+                <button id="export-data-button" class="btn btn-success">データをエクスポート</button>
+                <input type="file" id="import-file-input" accept=".json" style="display: none;">
+                <button id="import-data-button" class="btn btn-info">データをインポート</button>
+            </div>
+        </div>
+
+        <div id="stage-selection-screen">
+            <h2>通常ステージを選んでね！</h2>
+            <div id="stage-buttons-container" class="stage-buttons"></div>
+            <div class="navigation-buttons">
+                <button id="back-to-main-menu-from-stages" class="btn btn-secondary">メインメニューに戻る</button>
+            </div>
+        </div>
+
+        <div id="confirmation-test-selection-screen">
+            <h2>確認テストを選んでね！</h2>
+            <div id="confirmation-test-buttons-container" class="stage-buttons"></div>
+            <div class="navigation-buttons">
+                <button id="back-to-main-menu-from-tests" class="btn btn-secondary">メインメニューに戻る</button>
+            </div>
+        </div>
+
+        <div id="item-exchange-screen" class="container">
+            <h2>宝石をアイテムと交換</h2>
+            <div id="exchange-items-container"></div>
+            <div class="navigation-buttons">
+                <button id="go-to-history-button" class="btn btn-info">交換履歴を見る</button>
+                <button id="back-to-main-menu-from-exchange" class="btn btn-secondary">メインメニューに戻る</button>
+            </div>
+        </div>
+
+        <div id="item-history-screen" class="container">
+            <h2>交換履歴</h2>
+            <ul id="exchange-history-list"></ul>
+            <div class="navigation-buttons">
+                <button id="back-to-exchange-from-history" class="btn btn-secondary">交換画面に戻る</button>
+            </div>
+        </div>
+
+        <div id="quiz-section">
+            <p class="stage-info" id="stage-info"></p>
+            <p class="question-counter" id="question-counter"></p>
+            <div class="question-section">
+                <p class="question-display" id="question-display"></p>
+                <p class="question-example-sentence" id="question-example-sentence"></p>
+                <div class="options" id="options-container"></div>
+            </div>
+            <div class="feedback-section" id="feedback-section"></div>
+        </div>
+
+        <div id="answer-detail-section">
+            <h3>解答</h3>
+            <span id="detail-status-icon" class="status-icon"></span>
+            <p id="detail-feedback" class="feedback-text"></p>
+            <p><strong>ことばの意味:</strong> <span id="detail-meaning"></span></p>
+            <p class="correct-answer-display"><strong>解答:</strong> <span id="detail-proverb"></span></p>
+            <div class="example-sentence">
+                <strong>例文:</strong><br>
+                <span id="detail-example"></span>
+            </div>
+            <div class="navigation-buttons">
+                <button id="detail-next-question" class="btn btn-primary">次の問題へ</button>
+            </div>
+        </div>
+
+        <div class="results-section" id="results-section">
+            <h2>クイズ結果</h2>
+            <p id="score"></p>
+            <ul id="results-list" class="results-list"></ul>
+            <div class="navigation-buttons">
+                <button id="restart-quiz-button" class="btn btn-info">最初からやり直す</button>
+                <button id="retry-incorrect-button" class="btn btn-warning" style="display:none;">間違った問題に再挑戦</button>
+                <button id="start-next-stage-button" class="btn btn-primary" style="display:none;">次のステージへ</button>
+                <button id="back-to-selection-button" class="btn btn-secondary">選択画面に戻る</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="ruby-notification" class="gem-notification"></div>
+    <div id="sapphire-notification" class="gem-notification"></div>
+    <div id="diamond-notification" class="gem-notification"></div>
+    <div id="custom-alert-overlay" class="custom-alert-overlay" style="display: none;"></div>
+
+    <div id="random-stage-modal-overlay" class="custom-alert-overlay" style="display: none;">
+        <div class="custom-alert-box">
+            <h3>ランダム出題範囲の選択</h3>
+            <p>出題するステージの範囲を選んでください。</p>
+            <div class="random-stage-select-container">
+                <div>
+                    <label for="start-stage-select">開始ステージ:</label>
+                    <select id="start-stage-select"></select>
+                </div>
+                <div>
+                    <label for="end-stage-select">終了ステージ:</label>
+                    <select id="end-stage-select"></select>
+                </div>
+            </div>
+            <div class="custom-alert-buttons">
+                <button id="start-random-quiz-btn" class="btn btn-primary">クイズ開始</button>
+                <button id="cancel-random-quiz-btn" class="btn btn-secondary">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // 修正前: DOMContentLoadedイベントリスナーが通常の関数でした
+        // 修正後: 外部ファイルの読み込みを待つため、async（非同期）関数に変更しました
+        document.addEventListener('DOMContentLoaded', async () => {
+            
+            // 修正後: ここからが追加された部分です
+            // --- 外部データファイルの読み込み ---
+            let quizDataSource;
+            try {
+                // 'quizData.json'という名前のファイルを読み込みます
+                const response = await fetch('quizData.json');
+                // 読み込んだファイルの中身をJavaScriptで使える形に変換します
+                quizDataSource = await response.json();
+            } catch (error) {
+                // もしファイルの読み込みに失敗したら、エラーメッセージを表示します
+                console.error('クイズデータの読み込みに失敗しました:', error);
+                alert('クイズデータの読み込みに失敗しました。ファイルが正しい場所にあるか確認してください。');
+                return; // 処理を中断します
+            }
+            // 修正後: ここまでが追加された部分です
+
+            // 修正前: ここに巨大なquizDataSourceオブジェクトがありました
+            // 修正後: 上記の読み込み処理に置き換えたため、巨大なデータブロックを削除しました
+
+            const exchangeableItems = [
+                { id: 20, name: "逃走中１冊", cost: 200, gemType: 'rubies', available: true },
+                { id: 100, name: "ダイヤ1個 → サファイヤ100個", cost: 1, gemType: 'diamonds', gainGemType: 'sapphires', gainAmount: 100, available: true, type: 'gem_exchange' },
+                { id: 101, name: "ダイヤ1個 → ルビー100個", cost: 1, gemType: 'diamonds', gainGemType: 'rubies', gainAmount: 100, available: true, type: 'gem_exchange' },
+                { id: 3, name: "託児所「リトルポー」を追加", cost: 150, gemType: 'rubies', available: true },
+                { id: 1, name: "サバイバルシリーズか最強図鑑１冊", cost: 400, gemType: 'rubies', available: true },
+                { id: 5, name: "恐竜タッグ最強王図鑑", cost: 600, gemType: 'rubies', available: true },
+                // { id: 19, name: "【冬期講習参加者限定】Hallo Kitty and Fiendsパック", cost: 1, gemType: 'rubies', available: true },
+                { id: 21, name: "トッカライフ１分", cost: 80, gemType: 'rubies', available: true },
+                { id: 22, name: "トッカライフ１分", cost: 100, gemType: 'sapphires', available: true },
+                {
+                    id: 16,
+                    name: "家具パック追加",
+                    cost: 200,
+                    gemType: 'sapphires',
+                    available: true,
+                    type: 'dropdown',
+                    options: ["Care & Core 家具パック", "仲良し小グマの家具パック", "ヴィンテージ家具パック", "冬のホームパーティーパック"]
+                },
+                {
+                    id: 12,
+                    name: "チップトップ・トップスに建物追加",
+                    cost: 150,
+                    gemType: 'sapphires',
+                    available: true,
+                    type: 'dropdown',
+                    options: ["校庭", "ユースクラブ", "学校", "レイクパーク", "警察署", "庭付きのアパート", "小さな家", "託児所", "学校カフェテリア"]
+                },
+                {
+                    id: 13,
+                    name: "ビスケットタウンに建物追加",
+                    cost: 150,
+                    gemType: 'sapphires',
+                    available: true,
+                    type: 'dropdown',
+                    options: ["お家", "食料品店", "ペットショップ", "屋外プール", "ビストロレストラン", "ペットパーク", "どうぶつ病院", "バンガロー", "ペットホテル"]
+                },
+                {
+                    id: 14,
+                    name: "ＯＫストリートに建物追加",
+                    cost: 150,
+                    gemType: 'sapphires',
+                    available: true,
+                    type: 'dropdown',
+                    options: ["クランペット廃品処理場", "アーケード"]
+                },
+                {
+                    id: 15,
+                    name: "オムレツアイランドに建物追加",
+                    cost: 150,
+                    gemType: 'sapphires',
+                    available: true,
+                    type: 'dropdown',
+                    options: ["空港", "おみやげ屋", "ビーチ", "ツリーハウス"]
+                },
+                {
+                    id: 18,
+                    name: "レタスランドに建物追加",
+                    cost: 200,
+                    gemType: 'sapphires',
+                    available: true,
+                    type: 'dropdown',
+                    options: ["納屋", "農家", "マーケット", "田畑"]
+                },
+                { id: 17, name: "大家族の家", cost: 600, gemType: 'sapphires', available: true },
+                { id: 4, name: "もうちょっとまってね", cost: 999, gemType: 'rubies', available: false },
+            ];
+            
+
+            // --- 設定値 ---
+            const config = {
+                QUESTION_PER_STAGE: 10,
+                QUESTION_PER_REVIEW_STAGE: 15, // 復習ステージの問題数
+                INITIAL_UNLOCKED_STAGES: 5,
+                DIAMOND_MAX_CLEAR_COUNT: 3,
+                STAGES_PER_CONFIRMATION_GROUP: 5,
+                STAGE_TYPE: {
+                    NORMAL: 'NORMAL',
+                    RANDOM: 'RANDOM',
+                    CONFIRMATION: 'CONFIRMATION',
+                    REVIEW: 'REVIEW', // 復習ステージタイプを追加
+                }
+            };
+
+            // --- DOM要素のキャッシュ ---
+            const elements = {
+                body: document.body,
+                mainMenuScreen: document.getElementById('main-menu-screen'),
+                stageSelectionScreen: document.getElementById('stage-selection-screen'),
+                confirmationTestSelectionScreen: document.getElementById('confirmation-test-selection-screen'),
+                itemExchangeScreen: document.getElementById('item-exchange-screen'),
+                itemHistoryScreen: document.getElementById('item-history-screen'),
+                quizSection: document.getElementById('quiz-section'),
+                answerDetailSection: document.getElementById('answer-detail-section'),
+                resultsSection: document.getElementById('results-section'),
+                questionCounter: document.getElementById('question-counter'),
+                questionDisplay: document.getElementById('question-display'),
+                questionExampleSentence: document.getElementById('question-example-sentence'),
+                optionsContainer: document.getElementById('options-container'),
+                feedbackSection: document.getElementById('feedback-section'),
+                totalQuestionsInfo: document.getElementById('total-questions-info'),
+                stageInfo: document.getElementById('stage-info'),
+                rubyCount: document.getElementById('ruby-count'),
+                sapphireCount: document.getElementById('sapphire-count'),
+                diamondCount: document.getElementById('diamond-count'),
+                notifications: {
+                    ruby: document.getElementById('ruby-notification'),
+                    sapphire: document.getElementById('sapphire-notification'),
+                    diamond: document.getElementById('diamond-notification'),
+                },
+                detail: {
+                    statusIcon: document.getElementById('detail-status-icon'),
+                    feedback: document.getElementById('detail-feedback'),
+                    meaning: document.getElementById('detail-meaning'),
+                    proverb: document.getElementById('detail-proverb'),
+                    example: document.getElementById('detail-example'),
+                    nextQuestionButton: document.getElementById('detail-next-question'),
+                },
+                results: {
+                    score: document.getElementById('score'),
+                    list: document.getElementById('results-list'),
+                },
+                buttons: {
+                    goToStageSelect: document.getElementById('go-to-stage-select-btn'),
+                    goToTestSelect: document.getElementById('go-to-test-select-btn'),
+                    backToMainMenuFromStages: document.getElementById('back-to-main-menu-from-stages'),
+                    backToMainMenuFromTests: document.getElementById('back-to-main-menu-from-tests'),
+                    restartQuiz: document.getElementById('restart-quiz-button'),
+                    retryIncorrect: document.getElementById('retry-incorrect-button'),
+                    startNextStage: document.getElementById('start-next-stage-button'),
+                    backToSelection: document.getElementById('back-to-selection-button'),
+                    goToExchange: document.getElementById('go-to-exchange-button'),
+                    backToMainMenuFromExchange: document.getElementById('back-to-main-menu-from-exchange'),
+                    goToHistory: document.getElementById('go-to-history-button'),
+                    backToExchangeFromHistory: document.getElementById('back-to-exchange-from-history'),
+                    exportData: document.getElementById('export-data-button'),
+                    importData: document.getElementById('import-data-button'),
+                },
+                stageButtonsContainer: document.getElementById('stage-buttons-container'),
+                confirmationTestButtonsContainer: document.getElementById('confirmation-test-buttons-container'),
+                importFileInput: document.getElementById('import-file-input'),
+                exchangeItemsContainer: document.getElementById('exchange-items-container'),
+                exchangeHistoryList: document.getElementById('exchange-history-list'),
+                customAlertOverlay: document.getElementById('custom-alert-overlay'),
+                randomStageModal: {
+                    overlay: document.getElementById('random-stage-modal-overlay'),
+                    startSelect: document.getElementById('start-stage-select'),
+                    endSelect: document.getElementById('end-stage-select'),
+                    startBtn: document.getElementById('start-random-quiz-btn'),
+                    cancelBtn: document.getElementById('cancel-random-quiz-btn'),
+                }
+            };
+
+            // --- 状態管理 ---
+            let proverbs = quizDataSource.proverbs;
+            proverbs.forEach(p => {
+                if (typeof p.example === 'string') {
+                    p.example = [p.example];
+                }
+                p.isYojijukugo = p.proverb.replace(/ /g, '').length === 4;
+                // 修正前: p.isKatakana = /^[ァ-ヶー]+$/.test(p.proverb);
+                // 修正後: 中黒（・）もカタカナ語として判定するように修正
+                p.isKatakana = /^[ァ-ヶー・]+$/.test(p.proverb);
+            });
+            let confirmationTestDefinitions = [];
+            
+            let state = {
+                currentStage: 0,
+                currentStageType: config.STAGE_TYPE.NORMAL,
+                currentTestId: null,
+                stageQuestions: [],
+                currentQuestionIndex: 0,
+                score: 0,
+                quizHistory: [],
+                incorrectQuestions: [],
+                isRetryAttempt: false,
+                randomStageRange: { start: 1, end: 1 },
+                lastSelectionScreen: 'stageSelection', // 'stageSelection' or 'confirmationTestSelection'
+            };
+
+            let gameData = {};
+
+            // --- 初期化 ---
+            function init() {
+                generateStageDefinitions();
+                loadGameData();
+                setupEventListeners();
+                showScreen('mainMenu');
+                updateDisplayInfo();
+            }
+
+            // --- 画面表示制御 ---
+            function showScreen(screenName) {
+                [elements.mainMenuScreen, elements.stageSelectionScreen, elements.confirmationTestSelectionScreen, elements.itemExchangeScreen, elements.itemHistoryScreen, elements.quizSection, elements.answerDetailSection, elements.resultsSection].forEach(el => el.style.display = 'none');
+                elements.buttons.goToExchange.style.display = 'none';
+
+                switch (screenName) {
+                    case 'mainMenu':
+                        elements.mainMenuScreen.style.display = 'block';
+                        elements.buttons.goToExchange.style.display = 'inline-block';
+                        updateGemDisplay();
+                        break;
+                    case 'stageSelection':
+                        elements.stageSelectionScreen.style.display = 'block';
+                        elements.buttons.goToExchange.style.display = 'inline-block';
+                        renderStageSelection();
+                        break;
+                    case 'confirmationTestSelection':
+                        elements.confirmationTestSelectionScreen.style.display = 'block';
+                        elements.buttons.goToExchange.style.display = 'inline-block';
+                        renderConfirmationTestSelection();
+                        break;
+                    case 'itemExchange':
+                        elements.itemExchangeScreen.style.display = 'block';
+                        renderItemExchange();
+                        break;
+                    case 'itemHistory':
+                        elements.itemHistoryScreen.style.display = 'block';
+                        renderExchangeHistory();
+                        break;
+                    case 'quiz':
+                        elements.quizSection.style.display = 'block';
+                        break;
+                    case 'answerDetail':
+                        elements.answerDetailSection.style.display = 'block';
+                        break;
+                    case 'results':
+                        elements.resultsSection.style.display = 'block';
+                        break;
+                }
+            }
+            
+            // --- イベントリスナー設定 ---
+            function setupEventListeners() {
+                elements.buttons.goToStageSelect.addEventListener('click', () => showScreen('stageSelection'));
+                elements.buttons.goToTestSelect.addEventListener('click', () => showScreen('confirmationTestSelection'));
+                elements.buttons.backToMainMenuFromStages.addEventListener('click', () => showScreen('mainMenu'));
+                elements.buttons.backToMainMenuFromTests.addEventListener('click', () => showScreen('mainMenu'));
+                
+                elements.buttons.restartQuiz.addEventListener('click', () => showScreen(state.lastSelectionScreen));
+                elements.buttons.retryIncorrect.addEventListener('click', () => initializeQuiz(true));
+                elements.buttons.startNextStage.addEventListener('click', () => {
+                    state.currentStage++;
+                    initializeQuiz(false);
+                });
+                elements.buttons.backToSelection.addEventListener('click', () => showScreen(state.lastSelectionScreen));
+                elements.buttons.goToExchange.addEventListener('click', () => showScreen('itemExchange'));
+                elements.buttons.backToMainMenuFromExchange.addEventListener('click', () => showScreen('mainMenu'));
+                elements.buttons.goToHistory.addEventListener('click', () => showScreen('itemHistory'));
+                elements.buttons.backToExchangeFromHistory.addEventListener('click', () => showScreen('itemExchange'));
+
+                elements.buttons.exportData.addEventListener('click', exportData);
+                elements.buttons.importData.addEventListener('click', () => elements.importFileInput.click());
+                elements.importFileInput.addEventListener('change', importData);
+                elements.detail.nextQuestionButton.addEventListener('click', nextQuestion);
+                
+                elements.randomStageModal.startSelect.addEventListener('change', updateEndStageOptions);
+                elements.randomStageModal.cancelBtn.addEventListener('click', () => elements.randomStageModal.overlay.style.display = 'none');
+                elements.randomStageModal.startBtn.addEventListener('click', startRandomQuizFromModal);
+
+                elements.body.addEventListener('click', (event) => {
+                    if (elements.answerDetailSection.style.display === 'block' && !elements.answerDetailSection.contains(event.target)) {
+                        nextQuestion();
+                    }
+                });
+            }
+
+            // --- データ管理 ---
+            function saveGameData() {
+                try {
+                    localStorage.setItem('kotobaQuizGameData', JSON.stringify(gameData));
+                } catch (e) {
+                    console.error('ゲームデータの保存に失敗しました:', e);
+                }
+            }
+
+            function loadGameData() {
+                try {
+                    const savedData = localStorage.getItem('kotobaQuizGameData');
+                    gameData = savedData ? migrateData(JSON.parse(savedData)) : createDefaultGameData();
+                } catch (e) {
+                    console.error('ゲームデータのロードに失敗しました:', e);
+                    gameData = createDefaultGameData();
+                }
+            }
+
+            function createDefaultGameData() {
+                return {
+                    stageClearCounts: {},
+                    unlockedStages: config.INITIAL_UNLOCKED_STAGES,
+                    totalGems: { rubies: 0, sapphires: 0, diamonds: 0 },
+                    confirmationTestClearCounts: {},
+                    exchangedItems: [],
+                    lastLoginBonusDate: null,
+                    reviewQuestions: [],
+                };
+            }
+
+            function migrateData(data) {
+                if (!data.stageClearCounts || typeof data.unlockedStages !== 'number') {
+                    return createDefaultGameData();
+                }
+                data.totalGems = data.totalGems || { rubies: 0, sapphires: 0, diamonds: 0 };
+                if (typeof data.totalRubies !== 'undefined') {
+                    data.totalGems.rubies = data.totalRubies;
+                    delete data.totalRubies;
+                }
+                data.confirmationTestClearCounts = data.confirmationTestClearCounts || {};
+                if (data.confirmationTestsCleared) {
+                    Object.keys(data.confirmationTestsCleared).forEach(testId => {
+                        if (data.confirmationTestsCleared[testId]) {
+                            data.confirmationTestClearCounts[testId] = data.confirmationTestClearCounts[testId] || 1;
+                        }
+                    });
+                    delete data.confirmationTestsCleared;
+                }
+                data.exchangedItems = data.exchangedItems || [];
+                data.reviewQuestions = data.reviewQuestions || [];
+                delete data.storedIncorrectQuestions;
+                delete data.reviewStageClearCounts;
+                return data;
+            }
+
+            function exportData() {
+                const dataStr = JSON.stringify(gameData, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const formattedDate = new Date().toISOString().slice(0, 10);
+                a.download = `kotoba_quiz_data_${formattedDate}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                a.remove();
+            }
+
+            function importData(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        gameData = migrateData(importedData);
+                        saveGameData();
+                        showAlert('データを正常にインポートしました！', () => showScreen('mainMenu'));
+                    } catch (error) {
+                        showAlert('ファイルの読み込みに失敗しました。');
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            }
+
+            // --- クイズロジック ---
+            function initializeQuiz(isRetry = false) {
+                state.isRetryAttempt = isRetry;
+                
+                if (!isRetry) {
+                    checkLoginBonus();
+                }
+
+                showScreen('quiz');
+                elements.body.classList.remove('next-clickable');
+                elements.feedbackSection.innerHTML = '';
+
+                state.score = 0;
+                state.quizHistory = [];
+
+                if (isRetry) {
+                    state.stageQuestions = [...state.incorrectQuestions];
+                    shuffleArray(state.stageQuestions);
+                    state.incorrectQuestions = [];
+                } else {
+                    state.stageQuestions = createQuestionSet();
+                    state.incorrectQuestions = [];
+                }
+
+                if (state.stageQuestions.length === 0) {
+                     showAlert('出題できる問題がありません。', () => showScreen(state.lastSelectionScreen));
+                    return;
+                }
+
+                state.currentQuestionIndex = 0;
+                displayQuestion();
+                updateDisplayInfo();
+            }
+            
+            function createQuestionSet() {
+                let questions = [];
+                const allProverbs = [...proverbs];
+
+                switch (state.currentStageType) {
+                    case config.STAGE_TYPE.NORMAL:
+                        const startIndex = state.currentStage * config.QUESTION_PER_STAGE;
+                        const endIndex = Math.min(startIndex + config.QUESTION_PER_STAGE, allProverbs.length);
+                        questions = allProverbs.slice(startIndex, endIndex);
+                        break;
+                    case config.STAGE_TYPE.RANDOM:
+                        const rangeStartStage = state.randomStageRange.start - 1;
+                        const rangeEndStage = state.randomStageRange.end - 1;
+                        const questionStartIndex = rangeStartStage * config.QUESTION_PER_STAGE;
+                        const questionEndIndex = Math.min((rangeEndStage + 1) * config.QUESTION_PER_STAGE, allProverbs.length);
+                        let candidateQuestions = allProverbs.slice(questionStartIndex, questionEndIndex);
+                        shuffleArray(candidateQuestions);
+                        questions = candidateQuestions.slice(0, 13);
+                        break;
+                    case config.STAGE_TYPE.CONFIRMATION:
+                        const testDef = confirmationTestDefinitions.find(def => def.id === state.currentTestId);
+                        const candidateProverbs = [];
+                        for(let i = testDef.testStagesStartIndex; i <= testDef.testStagesEndIndex; i++) {
+                            const start = i * config.QUESTION_PER_STAGE;
+                            const end = Math.min(start + config.QUESTION_PER_STAGE, allProverbs.length);
+                            candidateProverbs.push(...allProverbs.slice(start, end));
+                        }
+                        shuffleArray(candidateProverbs);
+                        questions = candidateProverbs.slice(0, testDef.questionCount);
+                        break;
+                    case config.STAGE_TYPE.REVIEW:
+                        const reviewStartIndex = (state.currentStage - 1) * config.QUESTION_PER_REVIEW_STAGE;
+                        const reviewEndIndex = reviewStartIndex + config.QUESTION_PER_REVIEW_STAGE;
+                        questions = gameData.reviewQuestions.slice(reviewStartIndex, reviewEndIndex);
+                        break;
+                }
+                
+                if (state.currentStageType !== config.STAGE_TYPE.RANDOM) {
+                    shuffleArray(questions);
+                }
+                return questions;
+            }
+
+            function displayQuestion() {
+                elements.feedbackSection.innerHTML = ''; 
+
+                const currentQuestion = state.stageQuestions[state.currentQuestionIndex];
+                
+                if (Array.isArray(currentQuestion.example) && currentQuestion.example.length > 0) {
+                    currentQuestion.selectedExample = currentQuestion.example[Math.floor(Math.random() * currentQuestion.example.length)];
+                } else {
+                    currentQuestion.selectedExample = "";
+                }
+
+                const questionFormat = getQuestionFormat();
+                
+                elements.optionsContainer.innerHTML = '';
+                elements.questionDisplay.style.display = 'none';
+                elements.questionExampleSentence.style.display = 'none';
+
+                let options = [currentQuestion];
+
+                // 修正前: カタカナ語の絞り込みのみで、文字数での絞り込みが消えていた
+                // 修正後: カタカナ語での絞り込みと、文字数での絞り込みの両方が機能するように修正
+                const currentWordLength = currentQuestion.proverb.replace(/ /g, '').length;
+                // 問題がカタカナ語でなく、かつ2,3,4文字の熟語であるかを判定
+                const isSpecificLengthJukugo = [2, 3, 4].includes(currentWordLength) && !currentQuestion.isKatakana;
+
+                const wrongOptionsPool = proverbs.filter(p => {
+                    // 自分自身は選択肢から除外
+                    if (p.proverb === currentQuestion.proverb) return false;
+
+                    // カタカナ語のマッチング: 問題がカタカナ語なら選択肢もカタカナ語、そうでなければカタカナ語以外
+                    if (currentQuestion.isKatakana !== p.isKatakana) {
+                        return false;
+                    }
+
+                    // カタカナ語でない場合、熟語の文字数で絞り込む
+                    if (!currentQuestion.isKatakana) {
+                        const optionWordLength = p.proverb.replace(/ /g, '').length;
+                        if (isSpecificLengthJukugo) {
+                            // 問題が2,3,4字熟語の場合、選択肢も同じ文字数にする
+                            return optionWordLength === currentWordLength;
+                        } else {
+                            // 問題が2,3,4字熟語でない場合、選択肢もそうでないものにする
+                            return ![2, 3, 4].includes(optionWordLength);
+                        }
+                    }
+                    
+                    // カタカナ語の場合は、文字数縛りはせず、カタカナ語であることだけで絞り込む
+                    return true;
+                });
+
+                shuffleArray(wrongOptionsPool);
+                options.push(...wrongOptionsPool.slice(0, 4));
+                shuffleArray(options);
+
+                switch (questionFormat) {
+                    case 1: // 意味 -> 語句
+                        elements.questionDisplay.style.display = 'block';
+                        elements.questionDisplay.textContent = currentQuestion.meaning;
+                        options.forEach(option => createOptionButton(option, 'proverb'));
+                        break;
+                    case 2: // 例文 -> 語句
+                        elements.questionExampleSentence.style.display = 'block';
+                        elements.questionExampleSentence.innerHTML = currentQuestion.selectedExample.replace('__BLANK__', '<span class="blank-word">（　　　）</span>');
+                        options.forEach(option => createOptionButton(option, 'proverb'));
+                        break;
+                    case 3: // 語句 -> 意味
+                        elements.questionDisplay.style.display = 'block';
+                        elements.questionDisplay.innerHTML = createRubyHtml(currentQuestion.proverb, currentQuestion.furigana);
+                        speak(currentQuestion.furigana || currentQuestion.proverb);
+                        options.forEach(option => createOptionButton(option, 'meaning'));
+                        break;
+                    case 4: // 語句 -> 例文選択
+                        elements.questionDisplay.style.display = 'block';
+                        elements.questionDisplay.innerHTML = createRubyHtml(currentQuestion.proverb, currentQuestion.furigana);
+                        speak(currentQuestion.furigana || currentQuestion.proverb);
+
+                        let sentenceOptions = [{ proverbData: currentQuestion, isCorrect: true }];
+                        const wrongSentencePool = proverbs.filter(p => p.proverb !== currentQuestion.proverb);
+                        shuffleArray(wrongSentencePool);
+
+                        for (let i = 0; i < 4; i++) {
+                            if(wrongSentencePool[i]) {
+                                sentenceOptions.push({
+                                    proverbData: wrongSentencePool[i],
+                                    isCorrect: false
+                                });
+                            }
+                        }
+                        shuffleArray(sentenceOptions);
+
+                        sentenceOptions.forEach(option => {
+                            const button = document.createElement('button');
+                            const exampleSentence = option.proverbData.example[Math.floor(Math.random() * option.proverbData.example.length)];
+                            button.innerHTML = exampleSentence.replace('__BLANK__', '<span class="blank-word">（　　　）</span>');
+                            button.dataset.proverb = option.proverbData.proverb;
+                            button.addEventListener('click', () => checkAnswer(button, option.proverbData));
+                            elements.optionsContainer.appendChild(button);
+                        });
+                        break;
+                }
+                updateDisplayInfo();
+            }
+            
+            function createOptionButton(optionData, type) {
+                const button = document.createElement('button');
+                if (type === 'proverb') {
+                    button.innerHTML = createRubyHtml(optionData.proverb, optionData.furigana);
+                    button.classList.add('word-option');
+                } else {
+                    button.textContent = optionData.meaning;
+                }
+                button.dataset.proverb = optionData.proverb;
+                button.addEventListener('click', () => checkAnswer(button, optionData));
+                elements.optionsContainer.appendChild(button);
+            }
+
+            function checkAnswer(selectedButton, selectedOption) {
+                const currentQuestion = state.stageQuestions[state.currentQuestionIndex];
+                const isCorrect = (selectedOption.proverb === currentQuestion.proverb);
+
+                Array.from(elements.optionsContainer.children).forEach(button => {
+                    button.disabled = true;
+                    if (button.dataset.proverb === currentQuestion.proverb) button.classList.add('correct');
+                    else if (button === selectedButton) button.classList.add('incorrect');
+                });
+
+                elements.feedbackSection.innerHTML = `<p class="${isCorrect ? 'correct' : 'incorrect'}">${isCorrect ? '正解！' : '不正解...'}</p>`;
+                
+                if (isCorrect) {
+                    state.score++;
+                    if (state.currentStageType === config.STAGE_TYPE.REVIEW && !state.isRetryAttempt) {
+                        const indexToRemove = gameData.reviewQuestions.findIndex(q => q.proverb === currentQuestion.proverb);
+                        if (indexToRemove > -1) {
+                            gameData.reviewQuestions.splice(indexToRemove, 1);
+                        }
+                    }
+                } else {
+                    state.incorrectQuestions.push(currentQuestion);
+                    const isAlreadyInReview = gameData.reviewQuestions.some(q => q.proverb === currentQuestion.proverb);
+                    if (!isAlreadyInReview) {
+                        gameData.reviewQuestions.push(currentQuestion);
+                    }
+                }
+
+                recordQuizHistory(selectedOption, currentQuestion, isCorrect);
+                saveGameData();
+                setTimeout(() => showAnswerDetail(currentQuestion, isCorrect), 1000);
+            }
+            
+            function nextQuestion() {
+                state.currentQuestionIndex++;
+                if (state.currentQuestionIndex >= state.stageQuestions.length) {
+                    showResults();
+                } else {
+                    showScreen('quiz');
+                    elements.body.classList.remove('next-clickable');
+                    displayQuestion();
+                }
+            }
+            
+            function showResults() {
+                showScreen('results');
+                elements.results.score.textContent = `正解数: ${state.score} / ${state.stageQuestions.length}`;
+                renderResultsList();
+                updateResultButtons();
+
+                if (state.isRetryAttempt) {
+                    if (state.incorrectQuestions.length === 0) { 
+                        let gainedAmount = 0;
+                        let gemType = '';
+                        let message = '';
+                        
+                        if (state.currentStageType === config.STAGE_TYPE.REVIEW) {
+                            gainedAmount = 15;
+                            gemType = 'sapphire';
+                            gameData.totalGems.sapphires += gainedAmount;
+                            message = `🎉 復習ステージクリア！サファイア${gainedAmount}個獲得！ 🎉`;
+                        } else if (state.currentStageType === config.STAGE_TYPE.NORMAL) {
+                            gemType = 'ruby';
+                            const clearCount = gameData.stageClearCounts[state.currentStage] || 0;
+                            gainedAmount = clearCount === 0 ? 10 : (clearCount === 1 ? 3 : 1);
+                            gameData.totalGems.rubies += gainedAmount;
+                            gameData.stageClearCounts[state.currentStage] = clearCount + 1;
+                            message = `🎉 ステージ ${state.currentStage + 1} クリア！ルビー${gainedAmount}個獲得！ 🎉`;
+                        } else if (state.currentStageType === config.STAGE_TYPE.RANDOM) {
+                            gemType = 'sapphire';
+                            gainedAmount = 15;
+                            gameData.totalGems.sapphires += gainedAmount;
+                            message = `🎉 ランダムステージクリア！サファイア${gainedAmount}個獲得！ 🎉`;
+                        }
+
+                        if (gainedAmount > 0) {
+                            showGemNotification(gainedAmount, gemType);
+                        }
+                        elements.results.score.innerHTML = message;
+                    } else {
+                        elements.results.score.innerHTML = `残念...クリアならず。もう一度挑戦してね！`;
+                    }
+                    saveGameData();
+                    return;
+                }
+
+                if (state.currentStageType === config.STAGE_TYPE.REVIEW) {
+                    if (state.incorrectQuestions.length === 0) {
+                        const gainedAmount = 15;
+                        gameData.totalGems.sapphires += gainedAmount;
+                        showGemNotification(gainedAmount, 'sapphire');
+                        elements.results.score.innerHTML = `🎉 復習ステージクリア！サファイア${gainedAmount}個獲得！ 🎉`;
+                    }
+                } else if (state.currentStageType === config.STAGE_TYPE.CONFIRMATION) {
+                    handleConfirmationTestResults();
+                } else {
+                    handleNormalResults();
+                }
+                saveGameData();
+            }
+
+            // --- 表示更新・描画 ---
+            function updateDisplayInfo() {
+                let stageText = '';
+                let questionCountText = `問題 ${state.currentQuestionIndex + 1} / ${state.stageQuestions.length}`;
+
+                switch(state.currentStageType) {
+                    case config.STAGE_TYPE.NORMAL:
+                        stageText = `ステージ ${state.currentStage + 1}`;
+                        break;
+                    case config.STAGE_TYPE.RANDOM:
+                        stageText = `ランダム (${state.randomStageRange.start}～${state.randomStageRange.end}から)`;
+                        break;
+                    case config.STAGE_TYPE.CONFIRMATION:
+                        const def = confirmationTestDefinitions.find(d => d.id === state.currentTestId);
+                        stageText = def.title;
+                        break;
+                    case config.STAGE_TYPE.REVIEW:
+                        stageText = `復習ステージ ${state.currentStage}`;
+                        break;
+                }
+                elements.stageInfo.textContent = stageText;
+                elements.questionCounter.textContent = questionCountText;
+                elements.totalQuestionsInfo.textContent = `全${proverbs.length}問`;
+                updateGemDisplay();
+            }
+
+            function updateGemDisplay() {
+                elements.rubyCount.textContent = gameData.totalGems.rubies;
+                elements.sapphireCount.textContent = gameData.totalGems.sapphires;
+                elements.diamondCount.textContent = gameData.totalGems.diamonds;
+            }
+            
+            function renderStageSelection() {
+                updateGemDisplay();
+                const container = elements.stageButtonsContainer;
+                container.innerHTML = '';
+                
+                const numReviewStages = Math.floor(gameData.reviewQuestions.length / config.QUESTION_PER_REVIEW_STAGE);
+
+                if (numReviewStages > 0) {
+                    const reviewTitle = document.createElement('h3');
+                    reviewTitle.textContent = '復習ステージ';
+                    reviewTitle.style.width = '100%';
+                    container.appendChild(reviewTitle);
+
+                    for (let i = 0; i < numReviewStages; i++) {
+                        const reviewStageNum = i + 1;
+                        const button = document.createElement('button');
+                        button.textContent = `復習ステージ ${reviewStageNum}`;
+                        button.className = 'review-stage';
+
+                        button.addEventListener('click', () => {
+                            state.lastSelectionScreen = 'stageSelection';
+                            state.currentStageType = config.STAGE_TYPE.REVIEW;
+                            state.currentStage = reviewStageNum;
+                            initializeQuiz(false);
+                        });
+                        container.appendChild(button);
+                    }
+                }
+
+                const randomButton = document.createElement('button');
+                randomButton.textContent = '範囲を選んでランダム出題';
+                randomButton.className = 'random-stage';
+                randomButton.addEventListener('click', showRandomStageModal);
+                container.appendChild(randomButton);
+
+                const dropdownContainer = document.createElement('div');
+                dropdownContainer.className = 'stage-select-dropdown-container';
+
+                const totalStages = Math.ceil(proverbs.length / config.QUESTION_PER_STAGE);
+                const select = document.createElement('select');
+                select.id = 'stage-select-dropdown';
+
+                for (let i = 0; i < totalStages; i++) {
+                    const option = document.createElement('option');
+                    const isLocked = (i + 1 > gameData.unlockedStages);
+                    const clearCount = gameData.stageClearCounts[i] || 0;
+                    let stars = '☆'.repeat(Math.min(clearCount, 3));
+                    
+                    option.value = i;
+                    option.textContent = `ステージ ${i + 1} ${stars ? `(${stars})` : ''}`;
+                    option.disabled = isLocked;
+                    if (isLocked) {
+                        option.textContent += ' (ロック中)';
+                    }
+                    select.appendChild(option);
+                }
+                dropdownContainer.appendChild(select);
+
+                const startButton = document.createElement('button');
+                startButton.textContent = 'このステージを始める';
+                startButton.className = 'btn btn-primary';
+                startButton.addEventListener('click', () => {
+                    const selectedStage = parseInt(select.value);
+                    if (isNaN(selectedStage)) return;
+
+                    state.lastSelectionScreen = 'stageSelection';
+                    state.currentStageType = config.STAGE_TYPE.NORMAL;
+                    state.currentStage = selectedStage;
+                    initializeQuiz(false);
+                });
+                dropdownContainer.appendChild(startButton);
+                
+                container.appendChild(dropdownContainer);
+            }
+            
+            function renderConfirmationTestSelection() {
+                updateGemDisplay();
+                elements.confirmationTestButtonsContainer.innerHTML = '';
+                confirmationTestDefinitions.forEach(def => createStageButton({ type: config.STAGE_TYPE.CONFIRMATION, definition: def }));
+            }
+
+            function createStageButton({ type, definition }) { 
+                const button = document.createElement('button');
+                let isLocked = false;
+                let clearCount = 0;
+                let text = '';
+                let container = elements.confirmationTestButtonsContainer;
+                
+                text = `${definition.title} (${definition.questionCount}問)`;
+                button.className = 'confirmation-test';
+                clearCount = gameData.confirmationTestClearCounts[definition.id] || 0;
+                isLocked = !definition.testStageIndices.every(i => (gameData.stageClearCounts[i] || 0) >= 1);
+                button.addEventListener('click', () => {
+                    state.lastSelectionScreen = 'confirmationTestSelection';
+                    state.currentStageType = config.STAGE_TYPE.CONFIRMATION;
+                    state.currentTestId = definition.id;
+                    initializeQuiz(false);
+                });
+                
+                let stars = '☆'.repeat(Math.min(clearCount, 3));
+                button.innerHTML = `${text} ${stars ? `(${stars})` : ''}`;
+                button.disabled = isLocked;
+                if (isLocked) button.textContent += ` (ロック中)`;
+
+                container.appendChild(button);
+            }
+
+            function renderItemExchange() {
+                updateGemDisplay();
+                elements.exchangeItemsContainer.innerHTML = '';
+                exchangeableItems.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'exchange-item';
+
+                    const infoDiv = document.createElement('div');
+                    const costIconHtml = getGemIconHtml(item.gemType);
+                    let itemHtml = `<h3>${item.name}</h3>`;
+
+                    if (item.type === 'gem_exchange') {
+                        const gainIconHtml = getGemIconHtml(item.gainGemType);
+                        itemHtml += `<div class="item-cost">${costIconHtml} ${item.cost} → ${gainIconHtml} ${item.gainAmount}</div>`;
+                    } else {
+                        itemHtml += `<div class="item-cost">${item.available ? `${costIconHtml} ${item.cost}個` : ''}</div>`;
+                    }
+                    infoDiv.innerHTML = itemHtml;
+                    itemDiv.appendChild(infoDiv);
+
+                    const controlsDiv = document.createElement('div');
+
+                    if (item.type === 'dropdown' && item.available) {
+                        const select = document.createElement('select');
+                        select.id = `select-item-${item.id}`;
+                        select.className = 'exchange-select';
+                        item.options.forEach(opt => {
+                            const option = document.createElement('option');
+                            option.value = opt;
+                            option.textContent = opt;
+                            select.appendChild(option);
+                        });
+                        controlsDiv.appendChild(select);
+                    }
+
+                    const button = document.createElement('button');
+                    button.className = 'exchange-button';
+                    button.dataset.itemId = item.id;
+                    button.disabled = !item.available;
+                    button.textContent = item.available ? '交換する' : '準備中';
+                    button.addEventListener('click', handleExchange);
+                    controlsDiv.appendChild(button);
+                    
+                    itemDiv.appendChild(controlsDiv);
+
+                    elements.exchangeItemsContainer.appendChild(itemDiv);
+                });
+            }
+            
+            function renderExchangeHistory() {
+                elements.exchangeHistoryList.innerHTML = '';
+                if (gameData.exchangedItems.length === 0) {
+                    elements.exchangeHistoryList.innerHTML = '<li>まだ交換履歴はありません。</li>';
+                    return;
+                }
+                const sortedHistory = [...gameData.exchangedItems].sort((a, b) => new Date(b.date) - new Date(a.date));
+                sortedHistory.forEach(item => {
+                    const li = document.createElement('li');
+                    const date = new Date(item.date);
+                    const formattedDate = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+                    li.innerHTML = `<span>${item.name}</span><span>${formattedDate}</span>`;
+                    elements.exchangeHistoryList.appendChild(li);
+                });
+            }
+            
+            function renderResultsList() {
+                elements.results.list.innerHTML = '';
+                state.quizHistory.forEach(item => {
+                    const li = document.createElement('li');
+                    const statusIcon = `<span class="${item.isCorrect ? 'correct' : 'incorrect'}-icon">${item.isCorrect ? '⭕' : '❌'}</span>`;
+                    const correctProverbData = proverbs.find(p => p.proverb === item.correctProverb);
+                    const userAnswerData = proverbs.find(p => p.proverb === item.userAnswer.proverb);
+                    const userAnswerDisplay = item.format === 3 || item.format === 4 ? (userAnswerData ? userAnswerData.meaning : '選択なし') : createRubyHtml(userAnswerData.proverb, userAnswerData.furigana);
+                    const correctAnswerDisplay = item.format === 3 || item.format === 4 ? (correctProverbData ? correctProverbData.meaning : '') : createRubyHtml(correctProverbData.proverb, correctProverbData.furigana);
+                    
+                    li.innerHTML = `
+                        <div>
+                            <strong>Q:</strong> ${item.question}<br>
+                            <strong>あなたの回答:</strong> ${userAnswerDisplay}
+                            ${item.isCorrect ? '' : `<br><strong>正解:</strong> ${correctAnswerDisplay}`}
+                        </div>
+                        ${statusIcon}
+                    `;
+                    elements.results.list.appendChild(li);
+                });
+            }
+            
+            function updateResultButtons() {
+                elements.buttons.retryIncorrect.style.display = state.incorrectQuestions.length > 0 ? 'inline-block' : 'none';
+                const canGoNext = state.currentStageType === config.STAGE_TYPE.NORMAL && (state.currentStage + 1) < gameData.unlockedStages;
+                elements.buttons.startNextStage.style.display = canGoNext ? 'inline-block' : 'none';
+            }
+
+            // --- ヘルパー関数 ---
+            function getGemIconHtml(gemType) {
+                const colors = {
+                    rubies: '#E0115F',
+                    sapphires: '#0F52BA',
+                    diamonds: '#B9F2FF'
+                };
+                const color = colors[gemType] || '#333';
+                return `<span class="gem-icon" style="color: ${color};"><svg width="24" height="24" viewBox="0 0 24" fill="currentColor"><path d="M12 2L4 10L12 22L20 10L12 2Z"/></svg></span>`;
+            }
+            function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } }
+            function createRubyHtml(text, furigana) {
+                if (!furigana) return text;
+                const isKanji = (char) => /[\u4E00-\u9FFF]/.test(char);
+                let result = '';
+                let textCursor = 0;
+                let furiganaCursor = 0;
+                while (textCursor < text.length) {
+                    if (isKanji(text[textCursor])) {
+                        let kanjiBlock = '';
+                        while (textCursor < text.length && isKanji(text[textCursor])) {
+                            kanjiBlock += text[textCursor++];
+                        }
+                        let rubyText = '';
+                        while (furiganaCursor < furigana.length && !isKanji(furigana[furiganaCursor]) && (text[textCursor] !== furigana[furiganaCursor])) {
+                            rubyText += furigana[furiganaCursor++];
+                        }
+                        result += `<ruby>${kanjiBlock}<rt>${rubyText}</rt></ruby>`;
+                    } else {
+                        result += text[textCursor];
+                        if (furigana[furiganaCursor] === text[textCursor]) {
+                            furiganaCursor++;
+                        }
+                        textCursor++;
+                    }
+                }
+                return result;
+            }
+            function speak(text) { if ('speechSynthesis' in window) { const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'ja-JP'; window.speechSynthesis.speak(utterance); } }
+            function showGemNotification(amount, type) { const el = elements.notifications[type]; if (el) { el.textContent = `+${amount}個獲得！ ✨`; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1500); } }
+            function showAlert(message, callback) {
+                elements.customAlertOverlay.innerHTML = `<div class="custom-alert-box"><p class="custom-alert-message">${message}</p><div class="custom-alert-buttons"><button id="custom-alert-ok" class="btn btn-success">OK</button></div></div>`;
+                elements.customAlertOverlay.style.display = 'flex';
+                document.getElementById('custom-alert-ok').onclick = () => { elements.customAlertOverlay.style.display = 'none'; if (callback) callback(); };
+            }
+            function showConfirm(message, callback) {
+                elements.customAlertOverlay.innerHTML = `<div class="custom-alert-box"><p class="custom-alert-message">${message}</p><div class="custom-alert-buttons"><button id="custom-confirm-ok" class="btn btn-success">はい</button><button id="custom-confirm-cancel" class="btn btn-secondary">いいえ</button></div></div>`;
+                elements.customAlertOverlay.style.display = 'flex';
+                document.getElementById('custom-confirm-ok').onclick = () => { elements.customAlertOverlay.style.display = 'none'; callback(true); };
+                document.getElementById('custom-confirm-cancel').onclick = () => { elements.customAlertOverlay.style.display = 'none'; callback(false); };
+            }
+            
+            function getQuestionFormat() {
+                if (state.isRetryAttempt) {
+                    return state.currentQuestionIndex % 2 === 0 ? 3 : 4;
+                }
+
+                const index = state.currentQuestionIndex;
+
+                if (state.currentStageType === config.STAGE_TYPE.CONFIRMATION) {
+                    if (index < 7) return 1;
+                    if (index < 14) return 2;
+                    return 3;
+                }
+
+                if (state.currentStageType === config.STAGE_TYPE.RANDOM) {
+                    if (index === 12) return 4;
+                    if (index < 3) return 1;
+                    if (index < 9) return 2;
+                    return 3;
+                }
+
+                if (state.currentStageType === config.STAGE_TYPE.REVIEW) {
+                    const questionCount = state.stageQuestions.length;
+                    const oneThird = Math.floor(questionCount / 3);
+                    const twoThirds = Math.floor(questionCount * 2 / 3);
+                    if (index < oneThird) return 1;
+                    if (index < twoThirds) return 2;
+                    return 3;
+                }
+
+                if (index < 4) return 1;
+                if (index < 8) return 2;
+                return 3;
+            }
+
+            function generateStageDefinitions() {
+                const totalStages = Math.ceil(proverbs.length / config.QUESTION_PER_STAGE);
+                for (let i = 0; i < totalStages; i += config.STAGES_PER_CONFIRMATION_GROUP) {
+                    const startIdx = i;
+                    const endIdx = Math.min(i + config.STAGES_PER_CONFIRMATION_GROUP - 1, totalStages - 1);
+                    const stageIndices = Array.from({length: endIdx - startIdx + 1}, (_, k) => startIdx + k);
+                    const id = `${startIdx + 1}-${endIdx + 1}`;
+                    
+                    confirmationTestDefinitions.push({
+                        id: id, title: `${startIdx + 1}～${endIdx + 1}ステージ確認テスト`, testStagesStartIndex: startIdx, testStagesEndIndex: endIdx, testStageIndices: stageIndices, questionCount: 20
+                    });
+                }
+            }
+
+            function checkLoginBonus() {
+                const todayStr = new Date().toISOString().slice(0, 10);
+                if (gameData.lastLoginBonusDate !== todayStr) {
+                    gameData.lastLoginBonusDate = todayStr;
+                    gameData.totalGems.rubies += 1;
+                    updateGemDisplay();
+                    saveGameData();
+                    showAlert('ログインボーナス！<br>ルビーを１個、獲得しました！');
+                }
+            }
+            
+            function showAnswerDetail(question, isCorrect) {
+                showScreen('answerDetail');
+                elements.body.classList.add('next-clickable');
+                elements.detail.statusIcon.textContent = isCorrect ? '⭕' : '❌';
+                elements.detail.statusIcon.className = 'status-icon ' + (isCorrect ? 'correct' : 'incorrect');
+                elements.detail.feedback.textContent = isCorrect ? '正解！' : '不正解...';
+                elements.detail.feedback.className = 'feedback-text ' + (isCorrect ? 'correct' : 'incorrect');
+                elements.detail.meaning.textContent = question.meaning;
+                elements.detail.proverb.innerHTML = createRubyHtml(question.proverb, question.furigana);
+                const exampleText = question.selectedExample;
+                elements.detail.example.innerHTML = exampleText.replace('__BLANK__', `<ruby>${question.proverb}<rt>${question.furigana || ''}</rt></ruby>`);
+                speak(question.furigana || question.proverb);
+            }
+            
+            function recordQuizHistory(selected, correct, isCorrect) {
+                const questionFormat = getQuestionFormat();
+                let questionText;
+                switch(questionFormat) {
+                    case 1: questionText = correct.meaning; break;
+                    case 2: questionText = correct.selectedExample.replace('__BLANK__', '（空欄）'); break;
+                    case 3: questionText = createRubyHtml(correct.proverb, correct.furigana); break;
+                    case 4: questionText = `「${createRubyHtml(correct.proverb, correct.furigana)}」が入る文は？`; break;
+                }
+                state.quizHistory.push({ question: questionText, userAnswer: selected, correctProverb: correct.proverb, isCorrect, format: questionFormat });
+            }
+            
+            function handleExchange(event) {
+                const itemId = parseInt(event.target.dataset.itemId);
+                const item = exchangeableItems.find(i => i.id === itemId);
+                if (!item || !item.available) return;
+
+                if (item.type === 'gem_exchange') {
+                    const costGemName = { rubies: 'ルビー', sapphires: 'サファイア', diamonds: 'ダイヤ' }[item.gemType];
+                    const gainGemName = { rubies: 'ルビー', sapphires: 'サファイア', diamonds: 'ダイヤ' }[item.gainGemType];
+
+                    if (gameData.totalGems[item.gemType] >= item.cost) {
+                        showConfirm(`「${item.name}」の交換をしますか？<br>（${costGemName}が${item.cost}個へり、${gainGemName}が${item.gainAmount}個ふえます）`, (confirmed) => {
+                            if (confirmed) {
+                                gameData.totalGems[item.gemType] -= item.cost;
+                                gameData.totalGems[item.gainGemType] += item.gainAmount;
+                                gameData.exchangedItems.push({ id: item.id, name: item.name, date: new Date().toISOString() });
+                                saveGameData();
+                                showAlert(`交換しました！`);
+                                renderItemExchange();
+                            }
+                        });
+                    } else {
+                        showAlert(`${costGemName}が足りません。`);
+                    }
+                    return;
+                }
+
+                let itemName = item.name;
+                if (item.type === 'dropdown') {
+                    const selectElement = document.getElementById(`select-item-${item.id}`);
+                    if (selectElement) {
+                        itemName = `${item.name}（${selectElement.value}）`;
+                    }
+                }
+
+                const gemName = { rubies: 'ルビー', sapphires: 'サファイア' }[item.gemType];
+                if (gameData.totalGems[item.gemType] >= item.cost) {
+                    showConfirm(`「${itemName}」と交換しますか？<br>（${gemName}が${item.cost}個へります）`, (confirmed) => {
+                        if (confirmed) {
+                            gameData.totalGems[item.gemType] -= item.cost;
+                            gameData.exchangedItems.push({ id: item.id, name: itemName, date: new Date().toISOString() });
+                            saveGameData();
+                            showAlert(`「${itemName}」と交換しました！`);
+                            renderItemExchange();
+                        }
+                    });
+                } else {
+                    showAlert(`${gemName}が足りません。`);
+                }
+            }
+
+            function handleNormalResults() {
+                const isPerfect = state.incorrectQuestions.length === 0;
+                if (!isPerfect) {
+                    elements.results.score.innerHTML = `残念...クリアならず。もう一度挑戦してね！`;
+                    return;
+                }
+
+                let gainedAmount = 0;
+                let gemType = '';
+                if (state.currentStageType === config.STAGE_TYPE.RANDOM) {
+                    gemType = 'sapphire';
+                    gainedAmount = 15;
+                    gameData.totalGems.sapphires += gainedAmount;
+                    elements.results.score.innerHTML = `🎉 ランダムステージクリア！サファイア${gainedAmount}個獲得！ 🎉`;
+                } else {
+                    gemType = 'ruby';
+                    const clearCount = gameData.stageClearCounts[state.currentStage] || 0;
+                    gainedAmount = clearCount === 0 ? 10 : (clearCount === 1 ? 3 : 1);
+                    gameData.totalGems.rubies += gainedAmount;
+                    gameData.stageClearCounts[state.currentStage] = clearCount + 1;
+                    elements.results.score.innerHTML = `🎉 ステージ ${state.currentStage + 1} クリア！ルビー${gainedAmount}個獲得！ 🎉`;
+                }
+                showGemNotification(gainedAmount, gemType);
+            }
+
+            function handleConfirmationTestResults() {
+                const testDef = confirmationTestDefinitions.find(def => def.id === state.currentTestId);
+                const isPerfect = state.incorrectQuestions.length === 0;
+                if (isPerfect) {
+                    const clearCount = gameData.confirmationTestClearCounts[testDef.id] || 0;
+                    if (clearCount < config.DIAMOND_MAX_CLEAR_COUNT) {
+                        gameData.totalGems.diamonds += 1;
+                        showGemNotification(1, 'diamond');
+                    }
+                    gameData.confirmationTestClearCounts[testDef.id] = clearCount + 1;
+                    
+                    const newUnlockedCount = testDef.testStagesEndIndex + 1 + config.STAGES_PER_CONFIRMATION_GROUP;
+                    gameData.unlockedStages = Math.max(gameData.unlockedStages, newUnlockedCount);
+                    
+                    elements.results.score.innerHTML = `🎉 ${testDef.title}合格！ ${clearCount < config.DIAMOND_MAX_CLEAR_COUNT ? 'ダイヤ1個獲得！' : ''} 🎉`;
+                } else {
+                    
+                    elements.results.score.innerHTML = `残念...！<br>「${testDef.title}」は不合格です。<br>もう一度挑戦してね！`;
+                }
+            }
+            
+            function showRandomStageModal() {
+                const totalStages = Math.ceil(proverbs.length / config.QUESTION_PER_STAGE);
+                const startSelect = elements.randomStageModal.startSelect;
+                startSelect.innerHTML = '';
+                for (let i = 1; i <= totalStages; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `ステージ ${i}`;
+                    startSelect.appendChild(option);
+                }
+                updateEndStageOptions();
+                elements.randomStageModal.overlay.style.display = 'flex';
+            }
+
+            function updateEndStageOptions() {
+                const totalStages = Math.ceil(proverbs.length / config.QUESTION_PER_STAGE);
+                const startStage = parseInt(elements.randomStageModal.startSelect.value);
+                const endSelect = elements.randomStageModal.endSelect;
+                const currentEndValue = parseInt(endSelect.value);
+                endSelect.innerHTML = '';
+                for (let i = startStage; i <= totalStages; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `ステージ ${i}`;
+                    endSelect.appendChild(option);
+                }
+                if (currentEndValue >= startStage) {
+                    endSelect.value = currentEndValue;
+                }
+            }
+
+            function startRandomQuizFromModal() {
+                const startStage = parseInt(elements.randomStageModal.startSelect.value);
+                const endStage = parseInt(elements.randomStageModal.endSelect.value);
+
+                if (startStage > endStage) {
+                    showAlert('開始ステージは終了ステージより後の番号にできません。');
+                    return;
+                }
+                state.lastSelectionScreen = 'stageSelection';
+                state.currentStageType = config.STAGE_TYPE.RANDOM;
+                state.randomStageRange = { start: startStage, end: endStage };
+                elements.randomStageModal.overlay.style.display = 'none';
+                initializeQuiz(false);
+            }
+
+
+            // --- アプリケーション開始 ---
+            init();
+        });
+    </script>
+</body>
+</html>
