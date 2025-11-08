@@ -517,8 +517,152 @@
 
 
     <script>
-        // 修正前: DOMContentLoadedイベントリスナーが通常の関数でした
-        // 修正後: 外部ファイルの読み込みを待つため、async（非同期）関数に変更しました
+
+const PROGRESS_STORAGE_KEY = 'oilyouProgressData';
+let oilyouProgressData = {};
+
+function loadProgress() {
+    // 警告: 現在の実装では、単語の識別子としてJSONデータ内の配列インデックスを使用しています。
+    // この方法は、将来的に単語データの順序が変更されたり、単語が追加/削除されたりした場合に、
+    // ユーザーの進捗データがずれてしまう深刻なリスクを抱えています。
+    // 本番環境や長期的な運用を考える場合は、各単語にUUIDのような不変のIDを割り当て、
+    // それをキーとして進捗を保存する方式に移行することを強く推奨します。
+    try {
+        const savedData = localStorage.getItem(PROGRESS_STORAGE_KEY);
+        oilyouProgressData = savedData ? JSON.parse(savedData) : {};
+    } catch (e) {
+        console.error('「語彙王への道」の進捗データの読み込みに失敗しました:', e);
+        oilyouProgressData = {};
+    }
+    return oilyouProgressData;
+}
+
+function saveProgress(progressData) {
+    try {
+        localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(progressData));
+    } catch (e) {
+        console.error('「語彙王への道」の進捗データの保存に失敗しました:', e);
+    }
+}
+
+function _calculateWordProgress(wordIndex, progressData) {
+    const progress = progressData[String(wordIndex)];
+    if (!progress) {
+        return { completed: 0, total: 8 };
+    }
+    let completed = 0;
+    if (progress.form1) completed++;
+    if (progress.form2) completed++;
+    completed += progress.form3?.filter(Boolean).length || 0;
+    completed += progress.form4?.filter(Boolean).length || 0;
+    return { completed, total: 8 };
+}
+
+function createOilyouRandomQuizList(allWords, clearedStageWordIndexes) {
+    const quizPool = [];
+    
+    for (let i = 0; i < allWords.length; i++) {
+        if (!clearedStageWordIndexes.has(i)) {
+            continue;
+        }
+
+        const progress = _calculateWordProgress(i, oilyouProgressData);
+        if (progress.completed === 8) {
+            continue;
+        }
+
+        const wordProgress = oilyouProgressData[String(i)] || { form1: false, form2: false, form3: [false, false, false], form4: [false, false, false] };
+
+        if (!wordProgress.form1) {
+            quizPool.push({ wordIndex: i, formId: 1 });
+        }
+        if (!wordProgress.form2) {
+            quizPool.push({ wordIndex: i, formId: 2 });
+        }
+        
+        const word = allWords[i];
+        const numExamples = Array.isArray(word.example) ? word.example.length : 0;
+
+        for (let j = 0; j < 3; j++) {
+            if (j < numExamples) {
+                if (!wordProgress.form3?.[j]) {
+                    quizPool.push({ wordIndex: i, formId: 3, exampleIndex: j });
+                }
+                if (!wordProgress.form4?.[j]) {
+                    quizPool.push({ wordIndex: i, formId: 4, exampleIndex: j });
+                }
+            }
+        }
+    }
+
+    for (let i = quizPool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [quizPool[i], quizPool[j]] = [quizPool[j], quizPool[i]];
+    }
+
+    const quizList = quizPool.slice(0, 15).map(item => {
+        const progress = _calculateWordProgress(item.wordIndex, oilyouProgressData);
+        return {
+            ...item,
+            questionWord: allWords[item.wordIndex],
+            progressText: `${progress.completed}/${progress.total} 完了`
+        };
+    });
+
+    return quizList;
+}
+
+function updateProgress(wordIndex, formId, exampleIndex, isFirstTimeCorrect) {
+    if (!isFirstTimeCorrect) {
+        return;
+    }
+
+    const key = String(wordIndex);
+    if (!oilyouProgressData[key]) {
+        oilyouProgressData[key] = {
+            form1: false,
+            form2: false,
+            form3: [false, false, false],
+            form4: [false, false, false]
+        };
+    }
+
+    switch (formId) {
+        case 1:
+            oilyouProgressData[key].form1 = true;
+            break;
+        case 2:
+            oilyouProgressData[key].form2 = true;
+            break;
+        case 3:
+            if (oilyouProgressData[key].form3.length < 3) oilyouProgressData[key].form3 = [false, false, false];
+            oilyouProgressData[key].form3[exampleIndex] = true;
+            break;
+        case 4:
+            if (oilyouProgressData[key].form4.length < 3) oilyouProgressData[key].form4 = [false, false, false];
+            oilyouProgressData[key].form4[exampleIndex] = true;
+            break;
+    }
+
+    saveProgress(oilyouProgressData);
+}
+
+function calculateCompletionRate(allWords) {
+    if (!allWords || allWords.length === 0) {
+        return 0;
+    }
+
+    let completedCount = 0;
+    for (let i = 0; i < allWords.length; i++) {
+        const progress = _calculateWordProgress(i, oilyouProgressData);
+        if (progress.completed === 8) {
+            completedCount++;
+        }
+    }
+
+    return (completedCount / allWords.length) * 100;
+}
+
         document.addEventListener('DOMContentLoaded', async () => {
             
             // 修正後: ここからが追加された部分です
