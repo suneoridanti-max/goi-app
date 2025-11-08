@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -409,6 +408,8 @@
             <div class="main-menu-buttons">
                 <button id="go-to-stage-select-btn" class="main-menu-button">ステージ選択</button>
                 <button id="go-to-test-select-btn" class="main-menu-button">ステージ確認テスト</button>
+                <!-- 修正後: 「語彙王への道」を開始するためのボタンを追加 -->
+                <button id="go-to-oilyou-mode-btn" class="main-menu-button" style="background-color: #28a745;">語彙王への道</button>
             </div>
              <div class="data-management-buttons">
                 <button id="export-data-button" class="btn btn-success">データをエクスポート</button>
@@ -477,8 +478,8 @@
         </div>
 
         <div class="results-section" id="results-section">
-            <h2>クイズ結果</h2>
-            <p id="score"></p>
+            <h2 id="results-title">クイズ結果</h2>
+            <div id="score"></div>
             <ul id="results-list" class="results-list"></ul>
             <div class="navigation-buttons">
                 <button id="restart-quiz-button" class="btn btn-info">最初からやり直す</button>
@@ -665,24 +666,15 @@ function calculateCompletionRate(allWords) {
 
         document.addEventListener('DOMContentLoaded', async () => {
             
-            // 修正後: ここからが追加された部分です
-            // --- 外部データファイルの読み込み ---
             let quizDataSource;
             try {
-                // 'quizData.json'という名前のファイルを読み込みます
                 const response = await fetch('quizData.json');
-                // 読み込んだファイルの中身をJavaScriptで使える形に変換します
                 quizDataSource = await response.json();
             } catch (error) {
-                // もしファイルの読み込みに失敗したら、エラーメッセージを表示します
                 console.error('クイズデータの読み込みに失敗しました:', error);
                 alert('クイズデータの読み込みに失敗しました。ファイルが正しい場所にあるか確認してください。');
-                return; // 処理を中断します
+                return;
             }
-            // 修正後: ここまでが追加された部分です
-
-            // 修正前: ここに巨大なquizDataSourceオブジェクトがありました
-            // 修正後: 上記の読み込み処理に置き換えたため、巨大なデータブロックを削除しました
 
             const exchangeableItems = [
                 { id: 20, name: "逃走中１冊", cost: 200, gemType: 'rubies', available: true },
@@ -691,7 +683,6 @@ function calculateCompletionRate(allWords) {
                 { id: 3, name: "託児所「リトルポー」を追加", cost: 150, gemType: 'rubies', available: true },
                 { id: 1, name: "サバイバルシリーズか最強図鑑１冊", cost: 400, gemType: 'rubies', available: true },
                 { id: 5, name: "恐竜タッグ最強王図鑑", cost: 600, gemType: 'rubies', available: true },
-                // { id: 19, name: "【冬期講習参加者限定】Hallo Kitty and Fiendsパック", cost: 1, gemType: 'rubies', available: true },
                 { id: 21, name: "トッカライフ１分", cost: 80, gemType: 'rubies', available: true },
                 { id: 22, name: "トッカライフ１分", cost: 100, gemType: 'sapphires', available: true },
                 {
@@ -756,7 +747,7 @@ function calculateCompletionRate(allWords) {
             // --- 設定値 ---
             const config = {
                 QUESTION_PER_STAGE: 10,
-                QUESTION_PER_REVIEW_STAGE: 15, // 復習ステージの問題数
+                QUESTION_PER_REVIEW_STAGE: 15,
                 INITIAL_UNLOCKED_STAGES: 5,
                 DIAMOND_MAX_CLEAR_COUNT: 3,
                 STAGES_PER_CONFIRMATION_GROUP: 5,
@@ -764,7 +755,9 @@ function calculateCompletionRate(allWords) {
                     NORMAL: 'NORMAL',
                     RANDOM: 'RANDOM',
                     CONFIRMATION: 'CONFIRMATION',
-                    REVIEW: 'REVIEW', // 復習ステージタイプを追加
+                    REVIEW: 'REVIEW',
+                    // 修正後: 「語彙王への道」モードのタイプを追加
+                    OILYOU: 'OILYOU',
                 }
             };
 
@@ -803,12 +796,15 @@ function calculateCompletionRate(allWords) {
                     nextQuestionButton: document.getElementById('detail-next-question'),
                 },
                 results: {
+                    title: document.getElementById('results-title'),
                     score: document.getElementById('score'),
                     list: document.getElementById('results-list'),
                 },
                 buttons: {
                     goToStageSelect: document.getElementById('go-to-stage-select-btn'),
                     goToTestSelect: document.getElementById('go-to-test-select-btn'),
+                    // 修正後: 「語彙王への道」ボタンの要素を取得
+                    goToOilyouMode: document.getElementById('go-to-oilyou-mode-btn'),
                     backToMainMenuFromStages: document.getElementById('back-to-main-menu-from-stages'),
                     backToMainMenuFromTests: document.getElementById('back-to-main-menu-from-tests'),
                     restartQuiz: document.getElementById('restart-quiz-button'),
@@ -838,14 +834,13 @@ function calculateCompletionRate(allWords) {
             };
 
             // --- 状態管理 ---
-            let proverbs = quizDataSource.proverbs;
+            // 修正後: 各単語データに元の配列インデックスを保持させる
+            let proverbs = quizDataSource.proverbs.map((p, index) => ({ ...p, originalIndex: index }));
             proverbs.forEach(p => {
                 if (typeof p.example === 'string') {
                     p.example = [p.example];
                 }
                 p.isYojijukugo = p.proverb.replace(/ /g, '').length === 4;
-                // 修正前: p.isKatakana = /^[ァ-ヶー]+$/.test(p.proverb);
-                // 修正後: 中黒（・）もカタカナ語として判定するように修正
                 p.isKatakana = /^[ァ-ヶー・]+$/.test(p.proverb);
             });
             let confirmationTestDefinitions = [];
@@ -861,7 +856,7 @@ function calculateCompletionRate(allWords) {
                 incorrectQuestions: [],
                 isRetryAttempt: false,
                 randomStageRange: { start: 1, end: 1 },
-                lastSelectionScreen: 'stageSelection', // 'stageSelection' or 'confirmationTestSelection'
+                lastSelectionScreen: 'stageSelection',
             };
 
             let gameData = {};
@@ -920,16 +915,32 @@ function calculateCompletionRate(allWords) {
             function setupEventListeners() {
                 elements.buttons.goToStageSelect.addEventListener('click', () => showScreen('stageSelection'));
                 elements.buttons.goToTestSelect.addEventListener('click', () => showScreen('confirmationTestSelection'));
+                // 修正後: 「語彙王への道」ボタンにイベントリスナーを追加
+                elements.buttons.goToOilyouMode.addEventListener('click', startOilyouMode);
                 elements.buttons.backToMainMenuFromStages.addEventListener('click', () => showScreen('mainMenu'));
                 elements.buttons.backToMainMenuFromTests.addEventListener('click', () => showScreen('mainMenu'));
                 
-                elements.buttons.restartQuiz.addEventListener('click', () => showScreen(state.lastSelectionScreen));
+                // 修正後: クイズモードによって挙動が変わるように修正
+                elements.buttons.restartQuiz.addEventListener('click', () => {
+                    if (state.currentStageType === config.STAGE_TYPE.OILYOU) {
+                        startOilyouMode();
+                    } else {
+                        showScreen(state.lastSelectionScreen);
+                    }
+                });
                 elements.buttons.retryIncorrect.addEventListener('click', () => initializeQuiz(true));
                 elements.buttons.startNextStage.addEventListener('click', () => {
                     state.currentStage++;
                     initializeQuiz(false);
                 });
-                elements.buttons.backToSelection.addEventListener('click', () => showScreen(state.lastSelectionScreen));
+                // 修正後: クイズモードによって挙動が変わるように修正
+                elements.buttons.backToSelection.addEventListener('click', () => {
+                    if (state.currentStageType === config.STAGE_TYPE.OILYOU) {
+                        showScreen('mainMenu');
+                    } else {
+                        showScreen(state.lastSelectionScreen);
+                    }
+                });
                 elements.buttons.goToExchange.addEventListener('click', () => showScreen('itemExchange'));
                 elements.buttons.backToMainMenuFromExchange.addEventListener('click', () => showScreen('mainMenu'));
                 elements.buttons.goToHistory.addEventListener('click', () => showScreen('itemHistory'));
@@ -1039,6 +1050,13 @@ function calculateCompletionRate(allWords) {
             }
 
             // --- クイズロジック ---
+            // 修正後: 「語彙王への道」を開始する関数を新設
+            function startOilyouMode() {
+                state.lastSelectionScreen = 'mainMenu';
+                state.currentStageType = config.STAGE_TYPE.OILYOU;
+                initializeQuiz(false);
+            }
+
             function initializeQuiz(isRetry = false) {
                 state.isRetryAttempt = isRetry;
                 
@@ -1107,9 +1125,30 @@ function calculateCompletionRate(allWords) {
                         const reviewEndIndex = reviewStartIndex + config.QUESTION_PER_REVIEW_STAGE;
                         questions = gameData.reviewQuestions.slice(reviewStartIndex, reviewEndIndex);
                         break;
+                    // 修正後: 「語彙王への道」モードの問題作成ロジックを追加
+                    case config.STAGE_TYPE.OILYOU:
+                        loadProgress(); // 最新の進捗を読み込む
+                        const clearedStageWordIndexes = new Set();
+                        for (const stageIndex in gameData.stageClearCounts) {
+                            if (gameData.stageClearCounts[stageIndex] > 0) {
+                                const sIndex = parseInt(stageIndex) * config.QUESTION_PER_STAGE;
+                                const eIndex = sIndex + config.QUESTION_PER_STAGE;
+                                for (let i = sIndex; i < eIndex && i < proverbs.length; i++) {
+                                    clearedStageWordIndexes.add(i);
+                                }
+                            }
+                        }
+                        const oilyouQuizList = createOilyouRandomQuizList(proverbs, clearedStageWordIndexes);
+                        questions = oilyouQuizList.map(item => ({
+                            ...item.questionWord,
+                            oilyouFormId: item.formId,
+                            oilyouExampleIndex: item.exampleIndex,
+                            oilyouProgressText: item.progressText
+                        }));
+                        break;
                 }
                 
-                if (state.currentStageType !== config.STAGE_TYPE.RANDOM) {
+                if (state.currentStageType !== config.STAGE_TYPE.RANDOM && state.currentStageType !== config.STAGE_TYPE.OILYOU) {
                     shuffleArray(questions);
                 }
                 return questions;
@@ -1120,7 +1159,10 @@ function calculateCompletionRate(allWords) {
 
                 const currentQuestion = state.stageQuestions[state.currentQuestionIndex];
                 
-                if (Array.isArray(currentQuestion.example) && currentQuestion.example.length > 0) {
+                // 修正後: 「語彙王への道」モードで指定された例文を使うように修正
+                if (state.currentStageType === config.STAGE_TYPE.OILYOU && typeof currentQuestion.oilyouExampleIndex !== 'undefined') {
+                    currentQuestion.selectedExample = currentQuestion.example[currentQuestion.oilyouExampleIndex];
+                } else if (Array.isArray(currentQuestion.example) && currentQuestion.example.length > 0) {
                     currentQuestion.selectedExample = currentQuestion.example[Math.floor(Math.random() * currentQuestion.example.length)];
                 } else {
                     currentQuestion.selectedExample = "";
@@ -1134,34 +1176,21 @@ function calculateCompletionRate(allWords) {
 
                 let options = [currentQuestion];
 
-                // 修正前: カタカナ語の絞り込みのみで、文字数での絞り込みが消えていた
-                // 修正後: カタカナ語での絞り込みと、文字数での絞り込みの両方が機能するように修正
                 const currentWordLength = currentQuestion.proverb.replace(/ /g, '').length;
-                // 問題がカタカナ語でなく、かつ2,3,4文字の熟語であるかを判定
                 const isSpecificLengthJukugo = [2, 3, 4].includes(currentWordLength) && !currentQuestion.isKatakana;
 
                 const wrongOptionsPool = proverbs.filter(p => {
-                    // 自分自身は選択肢から除外
                     if (p.proverb === currentQuestion.proverb) return false;
+                    if (currentQuestion.isKatakana !== p.isKatakana) return false;
 
-                    // カタカナ語のマッチング: 問題がカタカナ語なら選択肢もカタカナ語、そうでなければカタカナ語以外
-                    if (currentQuestion.isKatakana !== p.isKatakana) {
-                        return false;
-                    }
-
-                    // カタカナ語でない場合、熟語の文字数で絞り込む
                     if (!currentQuestion.isKatakana) {
                         const optionWordLength = p.proverb.replace(/ /g, '').length;
                         if (isSpecificLengthJukugo) {
-                            // 問題が2,3,4字熟語の場合、選択肢も同じ文字数にする
                             return optionWordLength === currentWordLength;
                         } else {
-                            // 問題が2,3,4字熟語でない場合、選択肢もそうでないものにする
                             return ![2, 3, 4].includes(optionWordLength);
                         }
                     }
-                    
-                    // カタカナ語の場合は、文字数縛りはせず、カタカナ語であることだけで絞り込む
                     return true;
                 });
 
@@ -1170,23 +1199,23 @@ function calculateCompletionRate(allWords) {
                 shuffleArray(options);
 
                 switch (questionFormat) {
-                    case 1: // 意味 -> 語句
+                    case 1:
                         elements.questionDisplay.style.display = 'block';
                         elements.questionDisplay.textContent = currentQuestion.meaning;
                         options.forEach(option => createOptionButton(option, 'proverb'));
                         break;
-                    case 2: // 例文 -> 語句
+                    case 2:
                         elements.questionExampleSentence.style.display = 'block';
                         elements.questionExampleSentence.innerHTML = currentQuestion.selectedExample.replace('__BLANK__', '<span class="blank-word">（　　　）</span>');
                         options.forEach(option => createOptionButton(option, 'proverb'));
                         break;
-                    case 3: // 語句 -> 意味
+                    case 3:
                         elements.questionDisplay.style.display = 'block';
                         elements.questionDisplay.innerHTML = createRubyHtml(currentQuestion.proverb, currentQuestion.furigana);
                         speak(currentQuestion.furigana || currentQuestion.proverb);
                         options.forEach(option => createOptionButton(option, 'meaning'));
                         break;
-                    case 4: // 語句 -> 例文選択
+                    case 4:
                         elements.questionDisplay.style.display = 'block';
                         elements.questionDisplay.innerHTML = createRubyHtml(currentQuestion.proverb, currentQuestion.furigana);
                         speak(currentQuestion.furigana || currentQuestion.proverb);
@@ -1251,6 +1280,30 @@ function calculateCompletionRate(allWords) {
                             gameData.reviewQuestions.splice(indexToRemove, 1);
                         }
                     }
+                    // 修正後: 正解時に「語彙王への道」の進捗を更新する処理を追加
+                    const wordIndex = currentQuestion.originalIndex;
+                    if (typeof wordIndex !== 'undefined') {
+                        const formId = getQuestionFormat();
+                        const exampleIndex = (formId === 3 || formId === 4) 
+                            ? currentQuestion.example.indexOf(currentQuestion.selectedExample) 
+                            : undefined;
+                        
+                        const key = String(wordIndex);
+                        const progress = oilyouProgressData[key];
+                        let isFirstTimeCorrect = false;
+                        if (!progress) {
+                            isFirstTimeCorrect = true;
+                        } else {
+                            switch (formId) {
+                                case 1: isFirstTimeCorrect = !progress.form1; break;
+                                case 2: isFirstTimeCorrect = !progress.form2; break;
+                                case 3: isFirstTimeCorrect = !(progress.form3 && progress.form3[exampleIndex]); break;
+                                case 4: isFirstTimeCorrect = !(progress.form4 && progress.form4[exampleIndex]); break;
+                            }
+                        }
+                        updateProgress(wordIndex, formId, exampleIndex, isFirstTimeCorrect);
+                    }
+
                 } else {
                     state.incorrectQuestions.push(currentQuestion);
                     const isAlreadyInReview = gameData.reviewQuestions.some(q => q.proverb === currentQuestion.proverb);
@@ -1280,6 +1333,13 @@ function calculateCompletionRate(allWords) {
                 elements.results.score.textContent = `正解数: ${state.score} / ${state.stageQuestions.length}`;
                 renderResultsList();
                 updateResultButtons();
+
+                // 修正後: 「語彙王への道」モードの結果表示処理を呼び出す
+                if (state.currentStageType === config.STAGE_TYPE.OILYOU) {
+                    handleOilyouResults();
+                    saveGameData();
+                    return;
+                }
 
                 if (state.isRetryAttempt) {
                     if (state.incorrectQuestions.length === 0) { 
@@ -1350,6 +1410,11 @@ function calculateCompletionRate(allWords) {
                         break;
                     case config.STAGE_TYPE.REVIEW:
                         stageText = `復習ステージ ${state.currentStage}`;
+                        break;
+                    // 修正後: 「語彙王への道」モードの表示を追加
+                    case config.STAGE_TYPE.OILYOU:
+                        const currentQuestion = state.stageQuestions[state.currentQuestionIndex];
+                        stageText = `語彙王への道 ${currentQuestion ? `(${currentQuestion.oilyouProgressText})` : ''}`;
                         break;
                 }
                 elements.stageInfo.textContent = stageText;
@@ -1617,6 +1682,11 @@ function calculateCompletionRate(allWords) {
             }
             
             function getQuestionFormat() {
+                // 修正後: 「語彙王への道」モードの場合、問題データが持つ出題形式IDを返す
+                if (state.currentStageType === config.STAGE_TYPE.OILYOU) {
+                    const currentQuestion = state.stageQuestions[state.currentQuestionIndex];
+                    return currentQuestion.oilyouFormId;
+                }
                 if (state.isRetryAttempt) {
                     return state.currentQuestionIndex % 2 === 0 ? 3 : 4;
                 }
@@ -1797,6 +1867,35 @@ function calculateCompletionRate(allWords) {
                 }
             }
             
+            // 修正後: 「語彙王への道」モード専用の結果表示処理を新設
+            function handleOilyouResults() {
+                const total = state.stageQuestions.length;
+                const correct = state.score;
+                let message = `<p>正解数: ${correct} / ${total}</p>`;
+                
+                elements.results.title.textContent = 'トレーニング結果';
+
+                if (total > 0) {
+                    const perfect = (correct === total);
+                    if (perfect) {
+                        const gainedAmount = 10;
+                        gameData.totalGems.sapphires += gainedAmount;
+                        showGemNotification(gainedAmount, 'sapphire');
+                        message += `🎉 全問正解！素晴らしい！サファイアを${gainedAmount}個獲得しました！ 🎉`;
+                    } else {
+                        message += `お疲れ様でした！間違えた問題はまた出題されます。`;
+                    }
+                } else {
+                    message += `🎉 全ての単語をマスターしました！おめでとうございます！あなたは語彙王です！ 🎉`;
+                }
+
+                elements.results.score.innerHTML = message;
+                elements.buttons.retryIncorrect.style.display = 'none';
+                elements.buttons.startNextStage.style.display = 'none';
+                elements.buttons.restartQuiz.textContent = 'もう一度トレーニング';
+                elements.buttons.backToSelection.textContent = 'メインメニューに戻る';
+            }
+
             function showRandomStageModal() {
                 const totalStages = Math.ceil(proverbs.length / config.QUESTION_PER_STAGE);
                 const startSelect = elements.randomStageModal.startSelect;
