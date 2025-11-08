@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -363,7 +364,7 @@
         .random-stage-select-container > div { display: flex; align-items: center; gap: 10px; width: 220px; justify-content: space-between; }
         .random-stage-select-container select { padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 1em; }
 
-        /* 修正後: 「語彙王への道」の進捗表示スタイルを追加 */
+        /* --- 「語彙王への道」の進捗表示スタイル --- */ /* 修正前: コメントを修正 */
         #oilyou-progress-container {
             margin: 20px auto 0;
             max-width: 400px;
@@ -389,12 +390,23 @@
             border-radius: 10px 0 0 10px;
             transition: width 0.5s ease-in-out;
         }
-        #oilyou-progress-text {
-            display: block;
+        /* 修正後: 詳細な進捗表示用のスタイルを追加 */
+        #oilyou-progress-details {
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 10px;
             margin-top: 8px;
+        }
+        #oilyou-progress-text {
             font-size: 1.2em;
             font-weight: bold;
             color: #28a745;
+        }
+        #oilyou-progress-count {
+            font-size: 0.9em;
+            color: #555;
+            font-weight: bold;
         }
 
 
@@ -443,13 +455,17 @@
                 <button id="go-to-stage-select-btn" class="main-menu-button">ステージ選択</button>
                 <button id="go-to-test-select-btn" class="main-menu-button">ステージ確認テスト</button>
                 <button id="go-to-oilyou-mode-btn" class="main-menu-button" style="background-color: #28a745;">語彙王への道</button>
-                <!-- 修正後: 「語彙王への道」の進捗表示エリアを追加 -->
+                <!-- 修正前: <span id="oilyou-progress-text"> のみだった箇所を修正 -->
                 <div id="oilyou-progress-container">
                     <p>総合達成率</p>
                     <div class="progress-bar-background">
                         <div id="oilyou-progress-bar" class="progress-bar-foreground"></div>
                     </div>
-                    <span id="oilyou-progress-text">0%</span>
+                    <!-- 修正後: 詳細な進捗表示エリアを追加 -->
+                    <div id="oilyou-progress-details">
+                        <span id="oilyou-progress-text">0%</span>
+                        <span id="oilyou-progress-count">(0/0問)</span>
+                    </div>
                 </div>
             </div>
              <div class="data-management-buttons">
@@ -705,6 +721,33 @@ function calculateCompletionRate(allWords) {
     return (completedCount / allWords.length) * 100;
 }
 
+// 修正後: クリア済み問題数と総問題数を計算する関数を新設
+function calculateOilyouDetailedStats(allWords, progressData) {
+    let totalCompletedForms = 0;
+    let totalAllForms = 0;
+
+    if (!allWords || allWords.length === 0) {
+        return { totalCompletedForms: 0, totalAllForms: 0 };
+    }
+
+    for (let i = 0; i < allWords.length; i++) {
+        const word = allWords[i];
+        const numExamples = Array.isArray(word.example) ? word.example.length : 0;
+        // form1, form2 と、例文ごとの form3, form4 (最大3つ) の合計
+        const totalPerWord = 2 + (Math.min(numExamples, 3) * 2);
+        totalAllForms += totalPerWord;
+
+        const progress = progressData[String(i)];
+        if (progress) {
+            if (progress.form1) totalCompletedForms++;
+            if (progress.form2) totalCompletedForms++;
+            totalCompletedForms += progress.form3?.filter(Boolean).length || 0;
+            totalCompletedForms += progress.form4?.filter(Boolean).length || 0;
+        }
+    }
+    return { totalCompletedForms, totalAllForms };
+}
+
         document.addEventListener('DOMContentLoaded', async () => {
             
             let quizDataSource;
@@ -918,7 +961,7 @@ function calculateCompletionRate(allWords) {
                         elements.mainMenuScreen.style.display = 'block';
                         elements.buttons.goToExchange.style.display = 'inline-block';
                         updateGemDisplay();
-                        // 修正後: メインメニュー表示時に進捗を更新する関数を呼び出す
+                        // メインメニュー表示時に進捗を更新する関数を呼び出す
                         updateOilyouProgressDisplay();
                         break;
                     case 'stageSelection':
@@ -1314,7 +1357,7 @@ function calculateCompletionRate(allWords) {
                             gameData.reviewQuestions.splice(indexToRemove, 1);
                         }
                     }
-                    // 修正後: 再挑戦モードでは進捗を更新しない
+                    // 再挑戦モードでは進捗を更新しない
                     if (!state.isRetryAttempt) {
                         const wordIndex = currentQuestion.originalIndex;
                         if (typeof wordIndex !== 'undefined') {
@@ -1465,20 +1508,27 @@ function calculateCompletionRate(allWords) {
                 elements.diamondCount.textContent = gameData.totalGems.diamonds;
             }
 
-            // 修正後: 「語彙王への道」の進捗表示を更新する関数を新設
+            // 修正後: 「語彙王への道」の進捗表示を更新する関数を改修
             function updateOilyouProgressDisplay() {
                 if (!proverbs || proverbs.length === 0) return;
 
                 loadProgress();
                 const completionRate = calculateCompletionRate(proverbs);
                 const roundedRate = Math.round(completionRate * 10) / 10;
+                
+                // 修正後: 詳細な統計情報を計算する
+                const detailedStats = calculateOilyouDetailedStats(proverbs, oilyouProgressData);
 
                 const progressBar = document.getElementById('oilyou-progress-bar');
                 const progressText = document.getElementById('oilyou-progress-text');
+                // 修正後: 問題数表示用の要素を取得
+                const progressCount = document.getElementById('oilyou-progress-count');
 
-                if (progressBar && progressText) {
+                if (progressBar && progressText && progressCount) {
                     progressBar.style.width = `${completionRate}%`;
                     progressText.textContent = `${roundedRate}%`;
+                    // 修正後: 問題数を表示する
+                    progressCount.textContent = `(${detailedStats.totalCompletedForms}/${detailedStats.totalAllForms}問)`;
                 }
             }
             
@@ -1919,7 +1969,7 @@ function calculateCompletionRate(allWords) {
                 }
             }
             
-            // 修正後: 「語彙王への道」の結果処理を改修
+            // 「語彙王への道」の結果処理を改修
             function handleOilyouResults() {
                 const total = state.stageQuestions.length;
                 const correct = state.score;
