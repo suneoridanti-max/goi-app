@@ -1969,7 +1969,7 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                 }
             }
             
-            // 「語彙王への道」の結果処理を改修
+// 「語彙王への道」の結果処理を改修
             function handleOilyouResults() {
                 const total = state.stageQuestions.length;
                 const correct = state.score;
@@ -1984,14 +1984,18 @@ function calculateOilyouDetailedStats(allWords, progressData) {
 
                 if (total > 0) {
                     const perfect = (correct === total);
-                    // 再挑戦モードでは報酬を与えない
+                    // 修正前: 再挑戦モードでは報酬を与えない
                     if (perfect && !state.isRetryAttempt) {
-                        const gainedAmount = 10;
+                        const gainedAmount = 15; // 修正: 報酬を10から15サファイアに変更
                         gameData.totalGems.sapphires += gainedAmount;
                         showGemNotification(gainedAmount, 'sapphire');
                         message += `🎉 全問正解！素晴らしい！サファイアを${gainedAmount}個獲得しました！ 🎉`;
                     } else if (perfect && state.isRetryAttempt) {
-                        message += `🎉 全て正解しました！素晴らしい！ 🎉`;
+                        // 修正後: 再挑戦で全問正解した場合にも報酬を追加
+                        const gainedAmount = 15;
+                        gameData.totalGems.sapphires += gainedAmount;
+                        showGemNotification(gainedAmount, 'sapphire');
+                        message += `🎉 見事クリア！サファイアを${gainedAmount}個獲得しました！ 🎉`;
                     } else {
                         message += `お疲れ様でした！間違えた問題はまた出題されます。`;
                     }
@@ -2006,7 +2010,7 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                 elements.buttons.restartQuiz.textContent = 'もう一度トレーニング';
                 elements.buttons.backToSelection.textContent = 'メインメニューに戻る';
             }
-
+            
             function showRandomStageModal() {
                 const totalStages = Math.ceil(proverbs.length / config.QUESTION_PER_STAGE);
                 const startSelect = elements.randomStageModal.startSelect;
