@@ -1508,14 +1508,15 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                 elements.diamondCount.textContent = gameData.totalGems.diamonds;
             }
 
-            // 修正後: 「語彙王への道」の進捗表示を更新する関数を改修
+// 修正後: 「語彙王への道」の進捗表示を更新する関数を改修
             function updateOilyouProgressDisplay() {
                 if (!proverbs || proverbs.length === 0) return;
 
                 loadProgress();
                 const completionRate = calculateCompletionRate(proverbs);
-                const roundedRate = Math.round(completionRate * 10) / 10;
-                
+                // 修正前: const roundedRate = Math.round(completionRate * 10) / 10;
+                const roundedRate = completionRate.toFixed(2); // 修正後: toFixed(2)を使い、小数点第2位まで表示するように変更
+
                 // 修正後: 詳細な統計情報を計算する
                 const detailedStats = calculateOilyouDetailedStats(proverbs, oilyouProgressData);
 
@@ -1530,8 +1531,7 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                     // 修正後: 問題数を表示する
                     progressCount.textContent = `(${detailedStats.totalCompletedForms}/${detailedStats.totalAllForms}問)`;
                 }
-            }
-            
+            }            
             function renderStageSelection() {
                 updateGemDisplay();
                 const container = elements.stageButtonsContainer;
