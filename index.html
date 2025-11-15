@@ -705,6 +705,8 @@ function updateProgress(wordIndex, formId, exampleIndex, isFirstTimeCorrect) {
     saveProgress(oilyouProgressData);
 }
 
+// 修正前: 単語単位での達成率（8つのフォーム全てクリアで1カウント）を計算していた
+/*
 function calculateCompletionRate(allWords) {
     if (!allWords || allWords.length === 0) {
         return 0;
@@ -720,7 +722,25 @@ function calculateCompletionRate(allWords) {
 
     return (completedCount / allWords.length) * 100;
 }
+*/
 
+// 修正後: クリアした問題単位での達成率を計算するように変更
+function calculateCompletionRate(allWords) {
+    if (!allWords || allWords.length === 0) {
+        return 0;
+    }
+
+    // 「クリアした問題の総数」と「全ての問題の総数」を計算する関数を呼び出す
+    const detailedStats = calculateOilyouDetailedStats(allWords, oilyouProgressData);
+
+    // 全ての問題数が0の場合は、0を返す
+    if (detailedStats.totalAllForms === 0) {
+        return 0;
+    }
+    
+    // (クリアした問題数 / 全ての問題数) * 100 で達成率を計算する
+    return (detailedStats.totalCompletedForms / detailedStats.totalAllForms) * 100;
+}
 // 修正後: クリア済み問題数と総問題数を計算する関数を新設
 function calculateOilyouDetailedStats(allWords, progressData) {
     let totalCompletedForms = 0;
