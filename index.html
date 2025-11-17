@@ -1224,6 +1224,7 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                         const reviewEndIndex = reviewStartIndex + config.QUESTION_PER_REVIEW_STAGE;
                         questions = gameData.reviewQuestions.slice(reviewStartIndex, reviewEndIndex);
                         break;
+
                     case config.STAGE_TYPE.OILYOU:
                         loadProgress(); // 最新の進捗を読み込む
                         const clearedStageWordIndexes = new Set();
@@ -1243,8 +1244,7 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                             oilyouExampleIndex: item.exampleIndex,
                             oilyouProgressText: item.progressText
                         }));
-                        break;
-                }
+                        break;             }
                 
                 if (state.currentStageType !== config.STAGE_TYPE.RANDOM && state.currentStageType !== config.STAGE_TYPE.OILYOU) {
                     shuffleArray(questions);
