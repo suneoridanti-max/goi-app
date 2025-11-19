@@ -1943,7 +1943,7 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                 }
             }
 
-            function handleNormalResults() {
+function handleNormalResults() {
                 const isPerfect = state.incorrectQuestions.length === 0;
                 if (!isPerfect) {
                     elements.results.score.innerHTML = `残念...クリアならず。もう一度挑戦してね！`;
@@ -1966,6 +1966,16 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                     elements.results.score.innerHTML = `🎉 ステージ ${state.currentStage + 1} クリア！ルビー${gainedAmount}個獲得！ 🎉`;
                 }
                 showGemNotification(gainedAmount, gemType);
+
+                // --- 追加修正: 10%の確率でレア宝石（サファイア）獲得 ---
+                if (Math.random() < 0.1) { // 10%の確率（0.1未満）で当たり
+                    gameData.totalGems.sapphires += 1;
+                    // 通常の報酬通知と重ならないように、少し遅らせて通知を表示します
+                    setTimeout(() => showGemNotification(1, 'sapphire'), 1600);
+                    // 結果画面にメッセージを追加
+                    elements.results.score.innerHTML += `<br><span style="color: #0F52BA; font-weight: bold; font-size: 0.9em;">✨ レアボーナス！サファイア1個獲得！ ✨</span>`;
+                }
+                // ---------------------------------------------------
             }
 
             function handleConfirmationTestResults() {
@@ -1983,6 +1993,15 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                     gameData.unlockedStages = Math.max(gameData.unlockedStages, newUnlockedCount);
                     
                     elements.results.score.innerHTML = `🎉 ${testDef.title}合格！ ${clearCount < config.DIAMOND_MAX_CLEAR_COUNT ? 'ダイヤ1個獲得！' : ''} 🎉`;
+
+                    // --- 追加修正: 10%の確率でレア宝石（サファイア）獲得 ---
+                    if (Math.random() < 0.1) { // 10%の確率
+                        gameData.totalGems.sapphires += 1;
+                        setTimeout(() => showGemNotification(1, 'sapphire'), 1600);
+                        elements.results.score.innerHTML += `<br><span style="color: #0F52BA; font-weight: bold; font-size: 0.9em;">✨ レアボーナス！サファイア1個獲得！ ✨</span>`;
+                    }
+                    // ---------------------------------------------------
+
                 } else {
                     
                     elements.results.score.innerHTML = `残念...！<br>「${testDef.title}」は不合格です。<br>もう一度挑戦してね！`;
@@ -2010,12 +2029,30 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                         gameData.totalGems.sapphires += gainedAmount;
                         showGemNotification(gainedAmount, 'sapphire');
                         message += `🎉 全問正解！素晴らしい！サファイアを${gainedAmount}個獲得しました！ 🎉`;
+
+                        // --- 追加修正: 10%の確率でレア宝石（サファイア）獲得 ---
+                        if (Math.random() < 0.1) { // 10%の確率
+                            gameData.totalGems.sapphires += 1;
+                            setTimeout(() => showGemNotification(1, 'sapphire'), 1600);
+                            message += `<br><span style="color: #0F52BA; font-weight: bold; font-size: 0.9em;">✨ レアボーナス！サファイア1個獲得！ ✨</span>`;
+                        }
+                        // ---------------------------------------------------
+
                     } else if (perfect && state.isRetryAttempt) {
                         // 修正後: 再挑戦で全問正解した場合にも報酬を追加
                         const gainedAmount = 15;
                         gameData.totalGems.sapphires += gainedAmount;
                         showGemNotification(gainedAmount, 'sapphire');
                         message += `🎉 見事クリア！サファイアを${gainedAmount}個獲得しました！ 🎉`;
+
+                        // --- 追加修正: 10%の確率でレア宝石（サファイア）獲得 ---
+                        if (Math.random() < 0.1) { // 10%の確率
+                            gameData.totalGems.sapphires += 1;
+                            setTimeout(() => showGemNotification(1, 'sapphire'), 1600);
+                            message += `<br><span style="color: #0F52BA; font-weight: bold; font-size: 0.9em;">✨ レアボーナス！サファイア1個獲得！ ✨</span>`;
+                        }
+                        // ---------------------------------------------------
+                        
                     } else {
                         message += `お疲れ様でした！間違えた問題はまた出題されます。`;
                     }
@@ -2030,7 +2067,7 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                 elements.buttons.restartQuiz.textContent = 'もう一度トレーニング';
                 elements.buttons.backToSelection.textContent = 'メインメニューに戻る';
             }
-            
+                        
             function showRandomStageModal() {
                 const totalStages = Math.ceil(proverbs.length / config.QUESTION_PER_STAGE);
                 const startSelect = elements.randomStageModal.startSelect;
