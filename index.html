@@ -354,6 +354,7 @@
         .gem-notification { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px 40px; border-radius: 15px; font-size: 2.5em; font-weight: bold; z-index: 1000; opacity: 0; transition: opacity 0.5s ease-out, transform 0.5s ease-out; pointer-events: none; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         #ruby-notification { background-color: rgba(255, 0, 0, 0.8); box-shadow: 0 0 20px rgba(255, 0, 0, 0.6); }
         #sapphire-notification { background-color: rgba(0, 0, 255, 0.8); box-shadow: 0 0 20px rgba(0, 0, 255, 0.6); }
+        #emerald-notification { background-color: rgba(80, 200, 120, 0.9); box-shadow: 0 0 20px rgba(80, 200, 120, 0.6); } /* エメラルド追加 */
         #diamond-notification { background-color: rgba(255, 255, 0, 0.8); box-shadow: 0 0 20px rgba(255, 255, 0, 0.6); color: #333; }
         .gem-notification.show { opacity: 1; animation: fadeInOutScale 1.5s ease-in-out forwards; }
         .custom-alert-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 2000; }
@@ -364,7 +365,7 @@
         .random-stage-select-container > div { display: flex; align-items: center; gap: 10px; width: 220px; justify-content: space-between; }
         .random-stage-select-container select { padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 120px; font-size: 1em; }
 
-        /* --- 「語彙王への道」の進捗表示スタイル --- */ /* 修正前: コメントを修正 */
+        /* --- 「語彙王への道」の進捗表示スタイル --- */
         #oilyou-progress-container {
             margin: 20px auto 0;
             max-width: 400px;
@@ -390,7 +391,7 @@
             border-radius: 10px 0 0 10px;
             transition: width 0.5s ease-in-out;
         }
-        /* 修正後: 詳細な進捗表示用のスタイルを追加 */
+        
         #oilyou-progress-details {
             display: flex;
             justify-content: center;
@@ -441,6 +442,12 @@
                     <svg width="24" height="24" viewBox="0 0 24" fill="currentColor"><path d="M12 2L4 10L12 22L20 10L12 2Z"/></svg>
                 </span> <span id="sapphire-count">0</span>個
             </span>
+            <!-- エメラルド追加 -->
+            <span id="emerald-display">
+                <span class="gem-icon" style="color: #50C878;">
+                    <svg width="24" height="24" viewBox="0 0 24" fill="currentColor"><path d="M12 2L4 10L12 22L20 10L12 2Z"/></svg>
+                </span> <span id="emerald-count">0</span>個
+            </span>
             <span id="diamond-display">
                 <span class="gem-icon" style="color: #B9F2FF;">
                     <svg width="24" height="24" viewBox="0 0 24" fill="currentColor"><path d="M12 2L4 10L12 22L20 10L12 2Z"/></svg>
@@ -455,13 +462,13 @@
                 <button id="go-to-stage-select-btn" class="main-menu-button">ステージ選択</button>
                 <button id="go-to-test-select-btn" class="main-menu-button">ステージ確認テスト</button>
                 <button id="go-to-oilyou-mode-btn" class="main-menu-button" style="background-color: #28a745;">語彙王への道</button>
-                <!-- 修正前: <span id="oilyou-progress-text"> のみだった箇所を修正 -->
+                
                 <div id="oilyou-progress-container">
                     <p>総合達成率</p>
                     <div class="progress-bar-background">
                         <div id="oilyou-progress-bar" class="progress-bar-foreground"></div>
                     </div>
-                    <!-- 修正後: 詳細な進捗表示エリアを追加 -->
+                    
                     <div id="oilyou-progress-details">
                         <span id="oilyou-progress-text">0%</span>
                         <span id="oilyou-progress-count">(0/0問)</span>
@@ -549,6 +556,7 @@
 
     <div id="ruby-notification" class="gem-notification"></div>
     <div id="sapphire-notification" class="gem-notification"></div>
+    <div id="emerald-notification" class="gem-notification"></div> <!-- エメラルド追加 -->
     <div id="diamond-notification" class="gem-notification"></div>
     <div id="custom-alert-overlay" class="custom-alert-overlay" style="display: none;"></div>
 
@@ -580,11 +588,6 @@ const PROGRESS_STORAGE_KEY = 'oilyouProgressData';
 let oilyouProgressData = {};
 
 function loadProgress() {
-    // 警告: 現在の実装では、単語の識別子としてJSONデータ内の配列インデックスを使用しています。
-    // この方法は、将来的に単語データの順序が変更されたり、単語が追加/削除されたりした場合に、
-    // ユーザーの進捗データがずれてしまう深刻なリスクを抱えています。
-    // 本番環境や長期的な運用を考える場合は、各単語にUUIDのような不変のIDを割り当て、
-    // それをキーとして進捗を保存する方式に移行することを強く推奨します。
     try {
         const savedData = localStorage.getItem(PROGRESS_STORAGE_KEY);
         oilyouProgressData = savedData ? JSON.parse(savedData) : {};
@@ -705,43 +708,21 @@ function updateProgress(wordIndex, formId, exampleIndex, isFirstTimeCorrect) {
     saveProgress(oilyouProgressData);
 }
 
-// 修正前: 単語単位での達成率（8つのフォーム全てクリアで1カウント）を計算していた
-/*
+
 function calculateCompletionRate(allWords) {
     if (!allWords || allWords.length === 0) {
         return 0;
     }
 
-    let completedCount = 0;
-    for (let i = 0; i < allWords.length; i++) {
-        const progress = _calculateWordProgress(i, oilyouProgressData);
-        if (progress.completed === 8) {
-            completedCount++;
-        }
-    }
-
-    return (completedCount / allWords.length) * 100;
-}
-*/
-
-// 修正後: クリアした問題単位での達成率を計算するように変更
-function calculateCompletionRate(allWords) {
-    if (!allWords || allWords.length === 0) {
-        return 0;
-    }
-
-    // 「クリアした問題の総数」と「全ての問題の総数」を計算する関数を呼び出す
     const detailedStats = calculateOilyouDetailedStats(allWords, oilyouProgressData);
 
-    // 全ての問題数が0の場合は、0を返す
     if (detailedStats.totalAllForms === 0) {
         return 0;
     }
     
-    // (クリアした問題数 / 全ての問題数) * 100 で達成率を計算する
     return (detailedStats.totalCompletedForms / detailedStats.totalAllForms) * 100;
 }
-// 修正後: クリア済み問題数と総問題数を計算する関数を新設
+
 function calculateOilyouDetailedStats(allWords, progressData) {
     let totalCompletedForms = 0;
     let totalAllForms = 0;
@@ -884,10 +865,12 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                 stageInfo: document.getElementById('stage-info'),
                 rubyCount: document.getElementById('ruby-count'),
                 sapphireCount: document.getElementById('sapphire-count'),
+                emeraldCount: document.getElementById('emerald-count'), // エメラルド追加
                 diamondCount: document.getElementById('diamond-count'),
                 notifications: {
                     ruby: document.getElementById('ruby-notification'),
                     sapphire: document.getElementById('sapphire-notification'),
+                    emerald: document.getElementById('emerald-notification'), // エメラルド追加
                     diamond: document.getElementById('diamond-notification'),
                 },
                 detail: {
@@ -981,7 +964,6 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                         elements.mainMenuScreen.style.display = 'block';
                         elements.buttons.goToExchange.style.display = 'inline-block';
                         updateGemDisplay();
-                        // メインメニュー表示時に進捗を更新する関数を呼び出す
                         updateOilyouProgressDisplay();
                         break;
                     case 'stageSelection':
@@ -1085,7 +1067,7 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                 return {
                     stageClearCounts: {},
                     unlockedStages: config.INITIAL_UNLOCKED_STAGES,
-                    totalGems: { rubies: 0, sapphires: 0, diamonds: 0 },
+                    totalGems: { rubies: 0, sapphires: 0, emeralds: 0, diamonds: 0 }, // emeralds追加
                     confirmationTestClearCounts: {},
                     exchangedItems: [],
                     lastLoginBonusDate: null,
@@ -1097,7 +1079,11 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                 if (!data.stageClearCounts || typeof data.unlockedStages !== 'number') {
                     return createDefaultGameData();
                 }
-                data.totalGems = data.totalGems || { rubies: 0, sapphires: 0, diamonds: 0 };
+                data.totalGems = data.totalGems || { rubies: 0, sapphires: 0, emeralds: 0, diamonds: 0 };
+                if (typeof data.totalGems.emeralds === 'undefined') {
+                    data.totalGems.emeralds = 0;
+                }
+
                 if (typeof data.totalRubies !== 'undefined') {
                     data.totalGems.rubies = data.totalRubies;
                     delete data.totalRubies;
@@ -1377,7 +1363,7 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                             gameData.reviewQuestions.splice(indexToRemove, 1);
                         }
                     }
-                    // 再挑戦モードでは進捗を更新しない
+                    
                     if (!state.isRetryAttempt) {
                         const wordIndex = currentQuestion.originalIndex;
                         if (typeof wordIndex !== 'undefined') {
@@ -1525,30 +1511,26 @@ function calculateOilyouDetailedStats(allWords, progressData) {
             function updateGemDisplay() {
                 elements.rubyCount.textContent = gameData.totalGems.rubies;
                 elements.sapphireCount.textContent = gameData.totalGems.sapphires;
+                elements.emeraldCount.textContent = gameData.totalGems.emeralds; // エメラルド追加
                 elements.diamondCount.textContent = gameData.totalGems.diamonds;
             }
 
-// 修正後: 「語彙王への道」の進捗表示を更新する関数を改修
             function updateOilyouProgressDisplay() {
                 if (!proverbs || proverbs.length === 0) return;
 
                 loadProgress();
                 const completionRate = calculateCompletionRate(proverbs);
-                // 修正前: const roundedRate = Math.round(completionRate * 10) / 10;
-                const roundedRate = completionRate.toFixed(2); // 修正後: toFixed(2)を使い、小数点第2位まで表示するように変更
+                const roundedRate = completionRate.toFixed(2);
 
-                // 修正後: 詳細な統計情報を計算する
                 const detailedStats = calculateOilyouDetailedStats(proverbs, oilyouProgressData);
 
                 const progressBar = document.getElementById('oilyou-progress-bar');
                 const progressText = document.getElementById('oilyou-progress-text');
-                // 修正後: 問題数表示用の要素を取得
                 const progressCount = document.getElementById('oilyou-progress-count');
 
                 if (progressBar && progressText && progressCount) {
                     progressBar.style.width = `${completionRate}%`;
                     progressText.textContent = `${roundedRate}%`;
-                    // 修正後: 問題数を表示する
                     progressCount.textContent = `(${detailedStats.totalCompletedForms}/${detailedStats.totalAllForms}問)`;
                 }
             }            
@@ -1757,6 +1739,7 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                 const colors = {
                     rubies: '#E0115F',
                     sapphires: '#0F52BA',
+                    emeralds: '#50C878', // エメラルド追加
                     diamonds: '#B9F2FF'
                 };
                 const color = colors[gemType] || '#333';
@@ -1943,7 +1926,7 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                 }
             }
 
-function handleNormalResults() {
+            function handleNormalResults() {
                 const isPerfect = state.incorrectQuestions.length === 0;
                 if (!isPerfect) {
                     elements.results.score.innerHTML = `残念...クリアならず。もう一度挑戦してね！`;
@@ -1967,15 +1950,12 @@ function handleNormalResults() {
                 }
                 showGemNotification(gainedAmount, gemType);
 
-                // --- 追加修正: 10%の確率でレア宝石（サファイア）獲得 ---
-                if (Math.random() < 0.1) { // 10%の確率（0.1未満）で当たり
-                    gameData.totalGems.sapphires += 1;
-                    // 通常の報酬通知と重ならないように、少し遅らせて通知を表示します
-                    setTimeout(() => showGemNotification(1, 'sapphire'), 1600);
-                    // 結果画面にメッセージを追加
-                    elements.results.score.innerHTML += `<br><span style="color: #0F52BA; font-weight: bold; font-size: 0.9em;">✨ レアボーナス！サファイア1個獲得！ ✨</span>`;
+                // --- 10%の確率でエメラルド獲得 ---
+                if (Math.random() < 0.1) { 
+                    gameData.totalGems.emeralds += 1;
+                    setTimeout(() => showGemNotification(1, 'emerald'), 1600);
+                    elements.results.score.innerHTML += `<br><span style="color: #50C878; font-weight: bold; font-size: 0.9em;">✨ レアボーナス！エメラルド1個獲得！ ✨</span>`;
                 }
-                // ---------------------------------------------------
             }
 
             function handleConfirmationTestResults() {
@@ -1994,13 +1974,12 @@ function handleNormalResults() {
                     
                     elements.results.score.innerHTML = `🎉 ${testDef.title}合格！ ${clearCount < config.DIAMOND_MAX_CLEAR_COUNT ? 'ダイヤ1個獲得！' : ''} 🎉`;
 
-                    // --- 追加修正: 10%の確率でレア宝石（サファイア）獲得 ---
-                    if (Math.random() < 0.1) { // 10%の確率
-                        gameData.totalGems.sapphires += 1;
-                        setTimeout(() => showGemNotification(1, 'sapphire'), 1600);
-                        elements.results.score.innerHTML += `<br><span style="color: #0F52BA; font-weight: bold; font-size: 0.9em;">✨ レアボーナス！サファイア1個獲得！ ✨</span>`;
+                    // --- 10%の確率でエメラルド獲得 ---
+                    if (Math.random() < 0.1) {
+                        gameData.totalGems.emeralds += 1;
+                        setTimeout(() => showGemNotification(1, 'emerald'), 1600);
+                        elements.results.score.innerHTML += `<br><span style="color: #50C878; font-weight: bold; font-size: 0.9em;">✨ レアボーナス！エメラルド1個獲得！ ✨</span>`;
                     }
-                    // ---------------------------------------------------
 
                 } else {
                     
@@ -2008,13 +1987,11 @@ function handleNormalResults() {
                 }
             }
             
-// 「語彙王への道」の結果処理を改修
             function handleOilyouResults() {
                 const total = state.stageQuestions.length;
                 const correct = state.score;
                 let message = `<p>正解数: ${correct} / ${total}</p>`;
                 
-                // 再挑戦モードか通常モードかでタイトルを変更
                 if (state.isRetryAttempt) {
                     elements.results.title.textContent = '再挑戦の結果';
                 } else {
@@ -2023,35 +2000,18 @@ function handleNormalResults() {
 
                 if (total > 0) {
                     const perfect = (correct === total);
-                    // 修正前: 再挑戦モードでは報酬を与えない
-                    if (perfect && !state.isRetryAttempt) {
-                        const gainedAmount = 15; // 修正: 報酬を10から15サファイアに変更
-                        gameData.totalGems.sapphires += gainedAmount;
-                        showGemNotification(gainedAmount, 'sapphire');
-                        message += `🎉 全問正解！素晴らしい！サファイアを${gainedAmount}個獲得しました！ 🎉`;
-
-                        // --- 追加修正: 10%の確率でレア宝石（サファイア）獲得 ---
-                        if (Math.random() < 0.1) { // 10%の確率
-                            gameData.totalGems.sapphires += 1;
-                            setTimeout(() => showGemNotification(1, 'sapphire'), 1600);
-                            message += `<br><span style="color: #0F52BA; font-weight: bold; font-size: 0.9em;">✨ レアボーナス！サファイア1個獲得！ ✨</span>`;
-                        }
-                        // ---------------------------------------------------
-
-                    } else if (perfect && state.isRetryAttempt) {
-                        // 修正後: 再挑戦で全問正解した場合にも報酬を追加
+                    if (perfect) {
                         const gainedAmount = 15;
                         gameData.totalGems.sapphires += gainedAmount;
                         showGemNotification(gainedAmount, 'sapphire');
-                        message += `🎉 見事クリア！サファイアを${gainedAmount}個獲得しました！ 🎉`;
+                        message += `🎉 全問正解！サファイアを${gainedAmount}個獲得しました！ 🎉`;
 
-                        // --- 追加修正: 10%の確率でレア宝石（サファイア）獲得 ---
-                        if (Math.random() < 0.1) { // 10%の確率
-                            gameData.totalGems.sapphires += 1;
-                            setTimeout(() => showGemNotification(1, 'sapphire'), 1600);
-                            message += `<br><span style="color: #0F52BA; font-weight: bold; font-size: 0.9em;">✨ レアボーナス！サファイア1個獲得！ ✨</span>`;
+                        // --- 10%の確率でエメラルド獲得 ---
+                        if (Math.random() < 0.1) {
+                            gameData.totalGems.emeralds += 1;
+                            setTimeout(() => showGemNotification(1, 'emerald'), 1600);
+                            message += `<br><span style="color: #50C878; font-weight: bold; font-size: 0.9em;">✨ レアボーナス！エメラルド1個獲得！ ✨</span>`;
                         }
-                        // ---------------------------------------------------
                         
                     } else {
                         message += `お疲れ様でした！間違えた問題はまた出題されます。`;
@@ -2061,13 +2021,12 @@ function handleNormalResults() {
                 }
 
                 elements.results.score.innerHTML = message;
-                // 間違った問題があれば再挑戦ボタンを表示
                 elements.buttons.retryIncorrect.style.display = state.incorrectQuestions.length > 0 ? 'inline-block' : 'none';
                 elements.buttons.startNextStage.style.display = 'none';
                 elements.buttons.restartQuiz.textContent = 'もう一度トレーニング';
                 elements.buttons.backToSelection.textContent = 'メインメニューに戻る';
             }
-                        
+            
             function showRandomStageModal() {
                 const totalStages = Math.ceil(proverbs.length / config.QUESTION_PER_STAGE);
                 const startSelect = elements.randomStageModal.startSelect;
