@@ -761,7 +761,7 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                 return;
             }
 
-            const exchangeableItems = [
+const exchangeableItems = [
                 { id: 20, name: "逃走中１冊", cost: 200, gemType: 'rubies', available: true },
                 { id: 100, name: "ダイヤ1個 → サファイヤ100個", cost: 1, gemType: 'diamonds', gainGemType: 'sapphires', gainAmount: 100, available: true, type: 'gem_exchange' },
                 { id: 101, name: "ダイヤ1個 → ルビー100個", cost: 1, gemType: 'diamonds', gainGemType: 'rubies', gainAmount: 100, available: true, type: 'gem_exchange' },
@@ -825,9 +825,11 @@ function calculateOilyouDetailedStats(allWords, progressData) {
                     options: ["納屋", "農家", "マーケット", "田畑"]
                 },
                 { id: 17, name: "大家族の家", cost: 600, gemType: 'sapphires', available: true },
+                /* --- 修正箇所：ここに追加しました --- */
+                { id: 23, name: "５つ星ホテル（11/25にメインレッスン終わった人限定）", cost: 10, gemType: 'rubies', available: true },
+                /* ----------------------------------- */
                 { id: 4, name: "もうちょっとまってね", cost: 999, gemType: 'rubies', available: false },
-            ];
-            
+            ];            
 
             // --- 設定値 ---
             const config = {
