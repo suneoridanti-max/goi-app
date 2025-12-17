@@ -762,74 +762,115 @@ function calculateOilyouDetailedStats(allWords, progressData) {
             }
 
 const exchangeableItems = [
-   
-                { id: 17, name: "大家族の家", cost: 600, gemType: 'sapphires', available: true },
-                { id: 23, name: "５つ星ホテル（11/25にメインレッスン終わった人限定）", cost: 10, gemType: 'rubies', available: true },
-                { id: 20, name: "逃走中１冊", cost: 200, gemType: 'rubies', available: true },
-                { id: 100, name: "ダイヤ1個 → サファイヤ100個", cost: 1, gemType: 'diamonds', gainGemType: 'sapphires', gainAmount: 100, available: true, type: 'gem_exchange' },
-                { id: 101, name: "ダイヤ1個 → ルビー100個", cost: 1, gemType: 'diamonds', gainGemType: 'rubies', gainAmount: 100, available: true, type: 'gem_exchange' },
-                { id: 3, name: "託児所「リトルポー」を追加", cost: 150, gemType: 'rubies', available: true },
-                { id: 1, name: "サバイバルシリーズか最強図鑑１冊", cost: 400, gemType: 'rubies', available: true },
-                { id: 5, name: "恐竜タッグ最強王図鑑", cost: 600, gemType: 'rubies', available: true },
-                { id: 21, name: "トッカライフ１分", cost: 80, gemType: 'rubies', available: true },
-                { id: 22, name: "トッカライフ１分", cost: 100, gemType: 'sapphires', available: true },
-                {
-                    id: 16,
-                    name: "家具パック追加",
-                    cost: 200,
-                    gemType: 'sapphires',
-                    available: true,
-                    type: 'dropdown',
-                    options: ["Care & Core 家具パック", "仲良し小グマの家具パック", "ヴィンテージ家具パック", "冬のホームパーティーパック"]
-                },
-                {
-                    id: 12,
-                    name: "チップトップ・トップスに建物追加",
-                    cost: 150,
-                    gemType: 'sapphires',
-                    available: true,
-                    type: 'dropdown',
-                    options: ["校庭", "ユースクラブ", "学校", "レイクパーク", "警察署", "庭付きのアパート", "小さな家", "託児所", "学校カフェテリア"]
-                },
-                {
-                    id: 13,
-                    name: "ビスケットタウンに建物追加",
-                    cost: 150,
-                    gemType: 'sapphires',
-                    available: true,
-                    type: 'dropdown',
-                    options: ["お家", "食料品店", "ペットショップ", "屋外プール", "ビストロレストラン", "ペットパーク", "どうぶつ病院", "バンガロー", "ペットホテル"]
-                },
-                {
-                    id: 14,
-                    name: "ＯＫストリートに建物追加",
-                    cost: 150,
-                    gemType: 'sapphires',
-                    available: true,
-                    type: 'dropdown',
-                    options: ["クランペット廃品処理場", "アーケード"]
-                },
-                {
-                    id: 15,
-                    name: "オムレツアイランドに建物追加",
-                    cost: 150,
-                    gemType: 'sapphires',
-                    available: true,
-                    type: 'dropdown',
-                    options: ["空港", "おみやげ屋", "ビーチ", "ツリーハウス"]
-                },
-                {
-                    id: 18,
-                    name: "レタスランドに建物追加",
-                    cost: 200,
-                    gemType: 'sapphires',
-                    available: true,
-                    type: 'dropdown',
-                    options: ["納屋", "農家", "マーケット", "田畑"]
-                },
-                { id: 4, name: "もうちょっとまってね", cost: 999, gemType: 'rubies', available: false },
-            ];            
+    // --- 既存のアイテム（削除指示がないもの） ---
+    { id: 20, name: "逃走中１冊", cost: 200, gemType: 'rubies', available: true },
+    { id: 100, name: "ダイヤ1個 → サファイヤ100個", cost: 1, gemType: 'diamonds', gainGemType: 'sapphires', gainAmount: 100, available: true, type: 'gem_exchange' },
+    { id: 101, name: "ダイヤ1個 → ルビー100個", cost: 1, gemType: 'diamonds', gainGemType: 'rubies', gainAmount: 100, available: true, type: 'gem_exchange' },
+    { id: 1, name: "サバイバルシリーズか最強図鑑１冊", cost: 400, gemType: 'rubies', available: true },
+    { id: 5, name: "恐竜タッグ最強王図鑑", cost: 600, gemType: 'rubies', available: true },
+    { id: 21, name: "トッカライフ１分", cost: 80, gemType: 'rubies', available: true },
+    { id: 22, name: "トッカライフ１分", cost: 100, gemType: 'sapphires', available: true },
+    { id: 4, name: "もうちょっとまってね", cost: 999, gemType: 'rubies', available: false },
 
+    // --- 新規・変更アイテム（500サファイア） ---
+    { id: 30, name: "OKストリート：中央駅", cost: 500, gemType: 'sapphires', available: true },
+    {
+        id: 31,
+        name: "ホームデザイナー（500サファイア）",
+        cost: 500,
+        gemType: 'sapphires',
+        available: true,
+        type: 'dropdown',
+        options: ["屋上ガーデン付きの小さな家", "ボヘミアンハウス", "ダウンタウンロフト", "霧のコテージ", "ネオンレインボーアパート", "ロマンチックビーチハウス", "カエデ通りビル", "バケーションプールヴィラ", "ヤナギの木公園", "Y2Kロフト", "アットホームなレストラン"]
+    },
+    {
+        id: 32,
+        name: "スタイルパック",
+        cost: 500,
+        gemType: 'sapphires',
+        available: true,
+        type: 'dropdown',
+        options: ["シュガーピンクスタイルパック", "ベージュ・ベーシックスタイルパック", "Y2Kストロスタイルパック", "くつろぎ海岸スタイルパック", "夜の豪華なお出かけスタイルパック", "秋の到来スタイルパック", "リトルボースタイルパック", "パーフェクトなプレッピースタイルパック"]
+    },
+    {
+        id: 33,
+        name: "パック（500サファイア）",
+        cost: 500,
+        gemType: 'sapphires',
+        available: true,
+        type: 'dropdown',
+        options: ["ネオンピクセルパック", "太陽のストリーマーパック", "クリエーションワークショップパック", "クリーピー家具パック"]
+    },
+    { id: 34, name: "OKストリート：アパート", cost: 500, gemType: 'sapphires', available: true },
+    { id: 35, name: "ビジープラザ：高級レストラン", cost: 500, gemType: 'sapphires', available: true },
+    { id: 36, name: "ヴォックスバレー：大学", cost: 500, gemType: 'sapphires', available: true },
+    { id: 37, name: "朝の草原：ホーンテッドハウス", cost: 500, gemType: 'sapphires', available: true },
+
+    // --- 新規・変更アイテム（200サファイア） ---
+    {
+        id: 40,
+        name: "ホームデザイナー（200サファイア）",
+        cost: 200,
+        gemType: 'sapphires',
+        available: true,
+        type: 'dropdown',
+        options: ["託児所 リトルボー", "盆栽ビル", "くちばしストリートビル"]
+    },
+    {
+        id: 41,
+        name: "パック（200サファイア）",
+        cost: 200,
+        gemType: 'sapphires',
+        available: true,
+        type: 'dropdown',
+        options: ["冬のホームパーティーパック", "仲良し子グマの家具パック", "ヴィンテージ風家具パック"]
+    },
+    { id: 42, name: "OKストリート：クランペットのガラクタ置場", cost: 200, gemType: 'sapphires', available: true },
+    {
+        id: 43,
+        name: "ポンポン・ピーク",
+        cost: 200,
+        gemType: 'sapphires',
+        available: true,
+        type: 'dropdown',
+        options: ["歯医者さん", "温泉", "アイススケート・ヴィレッジ", "山小屋", "ポムポムプリン", "スキーリゾート"]
+    },
+    {
+        id: 44,
+        name: "ビジープラザ",
+        cost: 200,
+        gemType: 'sapphires',
+        available: true,
+        type: 'dropdown',
+        options: ["裁判所", "ワンルームマンション", "デザインストア"]
+    },
+    { id: 45, name: "ヴォックスバレー：野生の王国", cost: 200, gemType: 'sapphires', available: true },
+    {
+        id: 46,
+        name: "ビスケットタウン",
+        cost: 200,
+        gemType: 'sapphires',
+        available: true,
+        type: 'dropdown',
+        options: ["ビストロレストラン", "食料品店", "ペットショップ", "ペットパーク", "動物病院"]
+    },
+    { id: 47, name: "朝の草原：収穫祭", cost: 200, gemType: 'sapphires', available: true },
+    {
+        id: 48,
+        name: "チップトップ・トップス",
+        cost: 200,
+        gemType: 'sapphires',
+        available: true,
+        type: 'dropdown',
+        options: ["託児所", "警察署", "学校カフェテリア", "ユースクラブ"]
+    },
+
+    // --- 新規アイテム（200ルビー） ---
+    { id: 50, name: "霧島君はふつうじゃない １冊", cost: 200, gemType: 'rubies', available: true },
+
+    // --- 新規アイテム（エメラルド交換） ---
+    { id: 102, name: "エメラルド1個 → サファイア100個", cost: 1, gemType: 'emeralds', gainGemType: 'sapphires', gainAmount: 100, available: true, type: 'gem_exchange' },
+];
             // --- 設定値 ---
             const config = {
                 QUESTION_PER_STAGE: 10,
@@ -1877,14 +1918,17 @@ const exchangeableItems = [
                 state.quizHistory.push({ question: questionText, userAnswer: selected, correctProverb: correct.proverb, isCorrect, format: questionFormat });
             }
             
-            function handleExchange(event) {
+function handleExchange(event) {
                 const itemId = parseInt(event.target.dataset.itemId);
                 const item = exchangeableItems.find(i => i.id === itemId);
                 if (!item || !item.available) return;
 
+                // 宝石名のマッピングを定義（エメラルドを追加）
+                const gemNames = { rubies: 'ルビー', sapphires: 'サファイア', emeralds: 'エメラルド', diamonds: 'ダイヤ' };
+
                 if (item.type === 'gem_exchange') {
-                    const costGemName = { rubies: 'ルビー', sapphires: 'サファイア', diamonds: 'ダイヤ' }[item.gemType];
-                    const gainGemName = { rubies: 'ルビー', sapphires: 'サファイア', diamonds: 'ダイヤ' }[item.gainGemType];
+                    const costGemName = gemNames[item.gemType];
+                    const gainGemName = gemNames[item.gainGemType];
 
                     if (gameData.totalGems[item.gemType] >= item.cost) {
                         showConfirm(`「${item.name}」の交換をしますか？<br>（${costGemName}が${item.cost}個へり、${gainGemName}が${item.gainAmount}個ふえます）`, (confirmed) => {
@@ -1911,7 +1955,7 @@ const exchangeableItems = [
                     }
                 }
 
-                const gemName = { rubies: 'ルビー', sapphires: 'サファイア' }[item.gemType];
+                const gemName = gemNames[item.gemType];
                 if (gameData.totalGems[item.gemType] >= item.cost) {
                     showConfirm(`「${itemName}」と交換しますか？<br>（${gemName}が${item.cost}個へります）`, (confirmed) => {
                         if (confirmed) {
@@ -1926,7 +1970,6 @@ const exchangeableItems = [
                     showAlert(`${gemName}が足りません。`);
                 }
             }
-
             function handleNormalResults() {
                 const isPerfect = state.incorrectQuestions.length === 0;
                 if (!isPerfect) {
