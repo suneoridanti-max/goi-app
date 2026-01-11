@@ -279,6 +279,33 @@
         .stage-buttons .confirmation-test { background-color: #8A2BE2; color: white; }
         .stage-buttons .confirmation-test:hover:not(:disabled) { background-color: #6A1AA0; }
         
+/* --- アイテム交換：目立たせるアイテム用スタイル --- */
+        .exchange-item.highlight {
+            border: 3px solid #ff69b4; /* ピンク色の太枠 */
+            background-color: #fff0f5; /* 薄いピンクの背景 */
+            transform: scale(1.02); /* 少し大きく強調 */
+            box-shadow: 0 0 15px rgba(255, 105, 180, 0.4); /* ふわっと光る影 */
+            position: relative;
+            z-index: 1;
+            margin-bottom: 15px; /* 下との間隔を少し広げる */
+        }
+        /* 「イチオシ」バッジを表示 */
+        .exchange-item.highlight::before {
+            content: "★期間限定★";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ff1493;
+            color: white;
+            padding: 2px 15px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 0.9em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            white-space: nowrap;
+        }
+
         /* --- アイテム交換 & 履歴画面 --- */
         #item-exchange-screen, #item-history-screen { display: none; }
         #exchange-items-container { 
@@ -762,7 +789,57 @@ function calculateOilyouDetailedStats(allWords, progressData) {
             }
 
 const exchangeableItems = [
-    // --- 既存のアイテム（削除指示がないもの） ---
+    // --- ★一番目立つアイテム（890サファイア） ---
+    { id: 60, name: "冬のおでかけパック（期間限定）", cost: 890, gemType: 'sapphires', available: true, highlight: true },
+
+    // --- 新規アイテム（980サファイア） ---
+    {
+        id: 70,
+        name: "ホームデザイナー",
+        cost: 980,
+        gemType: 'sapphires',
+        available: true,
+        type: 'dropdown',
+        options: ["バブルポップスパ", "大家族のお家", "シュガーピンクパーラー", "ローカルショップ", "モフモフのお友達がいる家", "ニートストリートアパート"]
+    },
+    {
+        id: 71,
+        name: "スタイル",
+        cost: 980,
+        gemType: 'sapphires',
+        available: true,
+        type: 'dropdown',
+        options: ["古着の宝物スタイルパック"]
+    },
+    {
+        id: 72,
+        name: "OKストリート",
+        cost: 980,
+        gemType: 'sapphires',
+        available: true,
+        type: 'dropdown',
+        options: ["モフモフのお友達里親センター", "アクティビティハウス"]
+    },
+    {
+        id: 73,
+        name: "ビジープラザ",
+        cost: 980,
+        gemType: 'sapphires',
+        available: true,
+        type: 'dropdown',
+        options: ["ビジネスタワー", "モール"]
+    },
+    {
+        id: 74,
+        name: "ヴォックスバレー",
+        cost: 980,
+        gemType: 'sapphires',
+        available: true,
+        type: 'dropdown',
+        options: ["オールスタースタジアム", "スカイウェーブクラブ"]
+    },
+
+    // --- 既存のアイテム ---
     { id: 20, name: "逃走中１冊", cost: 200, gemType: 'rubies', available: true },
     { id: 100, name: "ダイヤ1個 → サファイヤ100個", cost: 1, gemType: 'diamonds', gainGemType: 'sapphires', gainAmount: 100, available: true, type: 'gem_exchange' },
     { id: 101, name: "ダイヤ1個 → ルビー100個", cost: 1, gemType: 'diamonds', gainGemType: 'rubies', gainAmount: 100, available: true, type: 'gem_exchange' },
@@ -771,8 +848,7 @@ const exchangeableItems = [
     { id: 21, name: "トッカライフ１分", cost: 80, gemType: 'rubies', available: true },
     { id: 22, name: "トッカライフ１分", cost: 100, gemType: 'sapphires', available: true },
    
-
-    // --- 新規・変更アイテム（500サファイア） ---
+    // --- 500サファイア ---
     { id: 30, name: "OKストリート：中央駅", cost: 500, gemType: 'sapphires', available: true },
     {
         id: 31,
@@ -806,7 +882,7 @@ const exchangeableItems = [
     { id: 36, name: "ヴォックスバレー：大学", cost: 500, gemType: 'sapphires', available: true },
     { id: 37, name: "朝の草原：ホーンテッドハウス", cost: 500, gemType: 'sapphires', available: true },
 
-    // --- 新規・変更アイテム（200サファイア） ---
+    // --- 200サファイア ---
     {
         id: 40,
         name: "ホームデザイナー",
@@ -865,12 +941,16 @@ const exchangeableItems = [
         options: ["託児所", "警察署", "学校カフェテリア", "ユースクラブ"]
     },
 
-    // --- 新規アイテム（200ルビー） ---
+    // --- 200ルビー ---
     { id: 50, name: "霧島君はふつうじゃない １冊", cost: 200, gemType: 'rubies', available: true },
 
-    // --- 新規アイテム（エメラルド交換） ---
+    // --- エメラルド交換 ---
     { id: 102, name: "エメラルド1個 → サファイア100個", cost: 1, gemType: 'emeralds', gainGemType: 'sapphires', gainAmount: 100, available: true, type: 'gem_exchange' },
 ];
+
+
+
+
             // --- 設定値 ---
             const config = {
                 QUESTION_PER_STAGE: 10,
@@ -1683,12 +1763,17 @@ const exchangeableItems = [
                 container.appendChild(button);
             }
 
-            function renderItemExchange() {
+function renderItemExchange() {
                 updateGemDisplay();
                 elements.exchangeItemsContainer.innerHTML = '';
                 exchangeableItems.forEach(item => {
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'exchange-item';
+                    
+                    // ★追加: 目立たせるアイテムの場合、特別なクラスをつける
+                    if (item.highlight) {
+                        itemDiv.classList.add('highlight');
+                    }
 
                     const infoDiv = document.createElement('div');
                     const costIconHtml = getGemIconHtml(item.gemType);
@@ -1730,8 +1815,10 @@ const exchangeableItems = [
 
                     elements.exchangeItemsContainer.appendChild(itemDiv);
                 });
-            }
-            
+            }            
+
+
+
             function renderExchangeHistory() {
                 elements.exchangeHistoryList.innerHTML = '';
                 if (gameData.exchangedItems.length === 0) {
